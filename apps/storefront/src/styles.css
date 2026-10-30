@@ -1,0 +1,26 @@
+:root {
+  color: #1b1b1b;
+  background: #f7f4ef;
+  font-family: "Iowan Old Style", "Palatino Linotype", Palatino, serif;
+}
+
+body {
+  margin: 0;
+}
+
+main {
+  max-width: 40rem;
+  margin: 4rem auto;
+  padding: 0 1.5rem;
+}
+
+h1 {
+  font-size: 2rem;
+  line-height: 1.2;
+  margin-bottom: 0.75rem;
+}
+
+p {
+  font-size: 1.125rem;
+  line-height: 1.5;
+}

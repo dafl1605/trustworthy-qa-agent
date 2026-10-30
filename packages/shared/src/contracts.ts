@@ -1,0 +1,83 @@
+import * as z from 'zod';
+
+export const TestScenarioSchema = z.enum([
+  'NORMAL',
+  'GHOST_SUCCESS',
+  'VERIFICATION_UNAVAILABLE',
+]);
+
+export const GateSchema = z.enum(['ALLOW', 'BLOCK', 'HOLD']);
+
+export const VerificationStatusSchema = z.enum(['CONFIRMED', 'DEFECT', 'UNKNOWN']);
+
+export const DiagnosisSchema = z.enum([
+  'SUCCESS',
+  'ORDER_NOT_PERSISTED',
+  'INCONCLUSIVE',
+  'OTHER',
+]);
+
+export const EvidenceSourceSchema = z.enum(['ui', 'api', 'db', 'trace', 'log']);
+
+export const EvidenceRecordSchema = z.object({
+  evidenceId: z.string().min(1),
+  runId: z.uuid(),
+  source: EvidenceSourceSchema,
+  observedAt: z.iso.datetime(),
+  kind: z.string().min(1),
+  summary: z.string().min(1),
+  artifactUri: z.string().min(1).optional(),
+});
+
+export const DiagnosisClaimSchema = z.object({
+  text: z.string().min(1),
+  evidenceIds: z.array(z.string().min(1)).min(1),
+});
+
+export const AgentDiagnosisSchema = z.object({
+  runId: z.uuid(),
+  diagnosis: DiagnosisSchema,
+  summary: z.string().min(1),
+  claims: z.array(DiagnosisClaimSchema),
+  missingEvidence: z.array(z.string().min(1)),
+  needsHumanReview: z.boolean(),
+});
+
+export const GateDecisionSchema = z.object({
+  runId: z.uuid(),
+  decision: GateSchema,
+  reasonCodes: z.array(z.string().min(1)).min(1),
+  verificationId: z.string().min(1),
+  policyVersion: z.string().min(1),
+});
+
+export const OrderItemRecordSchema = z.object({
+  sku: z.string().min(1),
+  quantity: z.number().int().positive(),
+  unitPriceCents: z.number().int().nonnegative(),
+});
+
+export const OrderRecordSchema = z.object({
+  orderId: z.uuid(),
+  runId: z.uuid(),
+  totalCents: z.number().int().nonnegative(),
+  currency: z.literal('USD'),
+  createdAt: z.iso.datetime(),
+  items: z.array(OrderItemRecordSchema).min(1).max(3),
+});
+
+export const HealthResponseSchema = z.object({
+  status: z.literal('ok'),
+  service: z.literal('trustworthy-qa-api'),
+});
+
+export type TestScenario = z.infer<typeof TestScenarioSchema>;
+export type Gate = z.infer<typeof GateSchema>;
+export type VerificationStatus = z.infer<typeof VerificationStatusSchema>;
+export type Diagnosis = z.infer<typeof DiagnosisSchema>;
+export type EvidenceRecord = z.infer<typeof EvidenceRecordSchema>;
+export type AgentDiagnosis = z.infer<typeof AgentDiagnosisSchema>;
+export type GateDecision = z.infer<typeof GateDecisionSchema>;
+export type OrderItemRecord = z.infer<typeof OrderItemRecordSchema>;
+export type OrderRecord = z.infer<typeof OrderRecordSchema>;
+export type HealthResponse = z.infer<typeof HealthResponseSchema>;
