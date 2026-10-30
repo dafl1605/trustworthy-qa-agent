@@ -1,0 +1,35 @@
+# Dependencies/build
+node_modules/
+**/node_modules/
+dist/
+build/
+coverage/
+.cache/
+*.tsbuildinfo
+
+# Credentials/private settings
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# SQLite state
+*.sqlite
+*.sqlite3
+*.db
+*.db-journal
+*.db-wal
+*.db-shm
+
+# Playwright runtime artifacts
+playwright-report/
+test-results/
+blob-report/
+traces/
+artifacts/
+
+# OS/editor
+.DS_Store
+.idea/
+.vscode/

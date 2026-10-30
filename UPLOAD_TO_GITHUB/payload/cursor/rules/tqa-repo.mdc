@@ -1,0 +1,14 @@
+---
+description: Baseline operating rules for Trustworthy QA Agent Cursor Cloud development
+alwaysApply: true
+---
+
+- Read and follow root `AGENTS.md` before editing any project file.
+- Read `docs/intent.md`, relevant parts of `docs/spec.md`, and `docs/sprint-plan.md`.
+- Load only the task-matched skill in `.claude/skills/`; read its `SKILL.md` explicitly if auto-discovery is unavailable.
+- Cursor owns implementation in `feature/QA-XX-*` branches; never push directly to `main` and never auto-merge.
+- Implement the smallest testable increment; run real validation commands and report results.
+- Never add MCP, Jev, dashboards, runtime multiagents or advanced CI/CD without approved change request.
+- Keep fault injection isolated to the local test harness. Preserve NORMAL, GHOST_SUCCESS, VERIFICATION_UNAVAILABLE semantics.
+- Never write credentials or real user data into this public repository.
+- For task instructions, see `docs/platforms/cursor/START_CURSOR.md`.
