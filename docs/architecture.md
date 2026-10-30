@@ -57,6 +57,7 @@ Column names are snake_case. Shared order objects are camelCase. QA-02 owns the 
 - diagnosis: `SUCCESS`, `ORDER_NOT_PERSISTED`, `INCONCLUSIVE`, `OTHER`
 - `EvidenceRecord`, `AgentDiagnosis`, `GateDecision`
 - `OrderRecord` aligned with the table: integer cents, currency `USD`, 1 to 3 line items, UUID `runId` and `orderId`
+- `CheckoutRequest`, `Product`, and `CheckoutConfirmation` describe the later HTTP shapes. No route implements them yet
 
 Each diagnosis claim needs at least one `evidenceId`. `UNKNOWN` is its own verification status. Nothing in this package decides the gate. The decision matrix stays policy for QA-12.
 

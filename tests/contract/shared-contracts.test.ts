@@ -4,6 +4,7 @@ import {
   AgentDiagnosisSchema,
   EvidenceRecordSchema,
   GateDecisionSchema,
+  CheckoutRequestSchema,
   OrderRecordSchema,
   VerificationStatusSchema,
 } from '@tqa/shared';
@@ -39,6 +40,19 @@ describe('shared contracts', () => {
 
     assert.equal(diagnosis.claims[0]?.evidenceIds[0], evidence.evidenceId);
     assert.equal(decision.decision, 'BLOCK');
+  });
+
+  it('rejects a checkout request with four line items', () => {
+    const parsed = CheckoutRequestSchema.safeParse({
+      runId,
+      items: [
+        { sku: 'sku-1', quantity: 1 },
+        { sku: 'sku-2', quantity: 1 },
+        { sku: 'sku-3', quantity: 1 },
+        { sku: 'sku-4', quantity: 1 },
+      ],
+    });
+    assert.equal(parsed.success, false);
   });
 
   it('rejects a claim with no evidence id and a fourth line item', () => {

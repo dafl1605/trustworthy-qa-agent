@@ -15,8 +15,9 @@ After **QA-01**, the repo includes a pnpm monorepo scaffold (`apps/storefront`, 
 pnpm install
 pnpm typecheck
 pnpm build
-pnpm --filter @tqa/api run db:migrate
-pnpm --filter @tqa/api start   # GET /health on PORT (default 3001)
+pnpm test
+pnpm db:migrate
+pnpm --filter @tqa/api start   # GET /health on 127.0.0.1:3001
 ```
 
 See [`docs/architecture.md`](docs/architecture.md) for layout and ADRs.

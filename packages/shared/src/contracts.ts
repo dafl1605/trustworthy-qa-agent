@@ -71,6 +71,30 @@ export const HealthResponseSchema = z.object({
   service: z.literal('trustworthy-qa-api'),
 });
 
+export const CheckoutItemSchema = z.object({
+  sku: z.string().min(1),
+  quantity: z.number().int().positive(),
+});
+
+export const CheckoutRequestSchema = z.object({
+  runId: z.uuid(),
+  items: z.array(CheckoutItemSchema).min(1).max(3),
+});
+
+export const ProductSchema = z.object({
+  sku: z.string().min(1),
+  name: z.string().min(1),
+  description: z.string(),
+  priceCents: z.number().int().positive(),
+});
+
+export const CheckoutConfirmationSchema = z.object({
+  orderId: z.uuid(),
+  runId: z.uuid(),
+  message: z.string().min(1),
+  totalCents: z.number().int().nonnegative(),
+});
+
 export type TestScenario = z.infer<typeof TestScenarioSchema>;
 export type Gate = z.infer<typeof GateSchema>;
 export type VerificationStatus = z.infer<typeof VerificationStatusSchema>;
@@ -81,3 +105,7 @@ export type GateDecision = z.infer<typeof GateDecisionSchema>;
 export type OrderItemRecord = z.infer<typeof OrderItemRecordSchema>;
 export type OrderRecord = z.infer<typeof OrderRecordSchema>;
 export type HealthResponse = z.infer<typeof HealthResponseSchema>;
+export type CheckoutItem = z.infer<typeof CheckoutItemSchema>;
+export type CheckoutRequest = z.infer<typeof CheckoutRequestSchema>;
+export type Product = z.infer<typeof ProductSchema>;
+export type CheckoutConfirmation = z.infer<typeof CheckoutConfirmationSchema>;
