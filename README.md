@@ -5,8 +5,6 @@ Trustworthy AI-powered QA agent for test failure investigation, evidence validat
 
 A reference repository operating kit for the BrowserStack talk **Who Tests the AI That Tests Your Software?**.
 
-**Start here:** [`START_HERE.md`](START_HERE.md).
-
 The package provides: AI-Native SDLC intent/spec, repository guardrails, four domain skills, Cursor Cloud implementation instructions, Claude Code Web independent-review instructions, protected-main GitHub ruleset guide, and daily task templates.
 
 It **does not** yet include a finished application, working agent, test executions or measured performance results. Cursor will build the source code beginning with QA-01.
