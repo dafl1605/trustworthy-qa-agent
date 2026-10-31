@@ -84,3 +84,5 @@ Explicitly read **only** the matching `.claude/skills/<name>/SKILL.md` at the be
 
 ## Required response after each task
 Task + status; files changed; commands actually executed and real results; evidence artifacts; estimated vs measured hours (or `unknown`); blockers/risks; next unblocked task. **Never invent tests, screenshots, measured savings or results.**
+
+After implementing the task, also deliver the filled checklist in `docs/templates/task-completion-checklist.md`. Leave a box unchecked when that condition did not happen.

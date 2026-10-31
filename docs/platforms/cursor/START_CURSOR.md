@@ -38,6 +38,7 @@ Push the feature branch and open a PR. Do not merge, approve, or alter rulesets.
 - Choose only one primary skill per task, a second for cross-cutting verification.
 - Ensure checkout/order behavior is genuine, not a mocked UI success masquerading as persistence.
 - On every PR: include spec IDs, actual checks and evidence paths; request Claude independent review.
+- After implementing the task, deliver the filled markdown in `docs/templates/task-completion-checklist.md`. Check a box only when that condition is true.
 
 ## Time management
 - 3-hour/day budget is a planning constraint, not a mandatory background runtime or a statement of elapsed time.
