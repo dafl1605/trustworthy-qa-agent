@@ -29,9 +29,14 @@ export const EvidenceRecordSchema = z.object({
   artifactUri: z.string().min(1).optional(),
 });
 
+/**
+ * A claim with no evidenceIds is parseable and must be treated as UNVERIFIED.
+ * Non-empty IDs still require later existence and factual-support checks.
+ * An LLM claim never independently authorizes an ALLOW gate decision.
+ */
 export const DiagnosisClaimSchema = z.object({
   text: z.string().min(1),
-  evidenceIds: z.array(z.string().min(1)).min(1),
+  evidenceIds: z.array(z.string().min(1)),
 });
 
 export const AgentDiagnosisSchema = z.object({
@@ -51,9 +56,19 @@ export const GateDecisionSchema = z.object({
   policyVersion: z.string().min(1),
 });
 
+export const SKU_MAX_LENGTH = 64;
+export const QUANTITY_MAX = 99;
+
+export const SkuSchema = z.string().min(1).max(SKU_MAX_LENGTH);
+export const QuantitySchema = z.number().int().min(1).max(QUANTITY_MAX);
+
+function hasUniqueSkus(items: ReadonlyArray<{ sku: string }>): boolean {
+  return new Set(items.map((item) => item.sku)).size === items.length;
+}
+
 export const OrderItemRecordSchema = z.object({
-  sku: z.string().min(1),
-  quantity: z.number().int().positive(),
+  sku: SkuSchema,
+  quantity: QuantitySchema,
   unitPriceCents: z.number().int().nonnegative(),
 });
 
@@ -63,7 +78,11 @@ export const OrderRecordSchema = z.object({
   totalCents: z.number().int().nonnegative(),
   currency: z.literal('USD'),
   createdAt: z.iso.datetime(),
-  items: z.array(OrderItemRecordSchema).min(1).max(3),
+  items: z
+    .array(OrderItemRecordSchema)
+    .min(1)
+    .max(3)
+    .refine(hasUniqueSkus, { message: 'items must not contain duplicate skus' }),
 });
 
 export const HealthResponseSchema = z.object({
@@ -72,17 +91,21 @@ export const HealthResponseSchema = z.object({
 });
 
 export const CheckoutItemSchema = z.object({
-  sku: z.string().min(1),
-  quantity: z.number().int().positive(),
+  sku: SkuSchema,
+  quantity: QuantitySchema,
 });
 
 export const CheckoutRequestSchema = z.object({
   runId: z.uuid(),
-  items: z.array(CheckoutItemSchema).min(1).max(3),
+  items: z
+    .array(CheckoutItemSchema)
+    .min(1)
+    .max(3)
+    .refine(hasUniqueSkus, { message: 'items must not contain duplicate skus' }),
 });
 
 export const ProductSchema = z.object({
-  sku: z.string().min(1),
+  sku: SkuSchema,
   name: z.string().min(1),
   description: z.string(),
   priceCents: z.number().int().positive(),
@@ -118,11 +141,35 @@ export const OrderLookupResultSchema = z.discriminatedUnion('code', [
   }),
 ]);
 
+/**
+ * Independent validator output. Runtime evaluation is QA-11.
+ * ALLOW may follow only from CONFIRMED here, never from an LLM claim alone.
+ */
+export const VerificationResultSchema = z.object({
+  verificationId: z.string().min(1),
+  runId: z.uuid(),
+  status: VerificationStatusSchema,
+  checkedAt: z.iso.datetime(),
+  details: z.string().min(1),
+});
+
+/**
+ * Labeled eval fixture. Runtime runner and dataset work are QA-13/QA-14.
+ */
+export const EvalCaseSchema = z.object({
+  caseId: z.string().min(1),
+  scenario: TestScenarioSchema,
+  expectedDiagnosis: DiagnosisSchema,
+  expectedVerification: VerificationStatusSchema,
+  expectedGate: GateSchema,
+});
+
 export type TestScenario = z.infer<typeof TestScenarioSchema>;
 export type Gate = z.infer<typeof GateSchema>;
 export type VerificationStatus = z.infer<typeof VerificationStatusSchema>;
 export type Diagnosis = z.infer<typeof DiagnosisSchema>;
 export type EvidenceRecord = z.infer<typeof EvidenceRecordSchema>;
+export type DiagnosisClaim = z.infer<typeof DiagnosisClaimSchema>;
 export type AgentDiagnosis = z.infer<typeof AgentDiagnosisSchema>;
 export type GateDecision = z.infer<typeof GateDecisionSchema>;
 export type OrderItemRecord = z.infer<typeof OrderItemRecordSchema>;
@@ -133,6 +180,8 @@ export type CheckoutRequest = z.infer<typeof CheckoutRequestSchema>;
 export type Product = z.infer<typeof ProductSchema>;
 export type CheckoutConfirmation = z.infer<typeof CheckoutConfirmationSchema>;
 export type OrderLookupResult = z.infer<typeof OrderLookupResultSchema>;
+export type VerificationResult = z.infer<typeof VerificationResultSchema>;
+export type EvalCase = z.infer<typeof EvalCaseSchema>;
 
 export const PRODUCT_FIXTURES: readonly Product[] = [
   {

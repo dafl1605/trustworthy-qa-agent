@@ -2,6 +2,7 @@ export {
   AgentDiagnosisSchema,
   DiagnosisClaimSchema,
   DiagnosisSchema,
+  EvalCaseSchema,
   EvidenceRecordSchema,
   EvidenceSourceSchema,
   GateDecisionSchema,
@@ -14,14 +15,21 @@ export {
   OrderLookupResultSchema,
   PRODUCT_FIXTURES,
   ProductSchema,
+  QUANTITY_MAX,
+  QuantitySchema,
+  SKU_MAX_LENGTH,
+  SkuSchema,
   OrderRecordSchema,
   TestScenarioSchema,
+  VerificationResultSchema,
   VerificationStatusSchema,
 } from './contracts.js';
 
 export type {
   AgentDiagnosis,
   Diagnosis,
+  DiagnosisClaim,
+  EvalCase,
   EvidenceRecord,
   Gate,
   GateDecision,
@@ -34,5 +42,6 @@ export type {
   Product,
   OrderRecord,
   TestScenario,
+  VerificationResult,
   VerificationStatus,
 } from './contracts.js';

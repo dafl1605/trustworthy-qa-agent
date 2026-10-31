@@ -2,13 +2,17 @@ import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 import {
   AgentDiagnosisSchema,
+  CheckoutRequestSchema,
+  EvalCaseSchema,
   EvidenceRecordSchema,
   GateDecisionSchema,
-  CheckoutRequestSchema,
   OrderLookupResultSchema,
   OrderRecordSchema,
   PRODUCT_FIXTURES,
   ProductSchema,
+  QUANTITY_MAX,
+  SKU_MAX_LENGTH,
+  VerificationResultSchema,
   VerificationStatusSchema,
 } from '@tqa/shared';
 
@@ -45,6 +49,32 @@ describe('shared contracts', () => {
     assert.equal(decision.decision, 'BLOCK');
   });
 
+  it('parses a claim with empty evidenceIds as UNVERIFIED input, not as a gate ALLOW', () => {
+    const diagnosis = AgentDiagnosisSchema.parse({
+      runId,
+      diagnosis: 'SUCCESS',
+      summary: 'Unsupported claim.',
+      claims: [{ text: 'The order exists.', evidenceIds: [] }],
+      missingEvidence: ['order-row'],
+      needsHumanReview: true,
+    });
+
+    assert.deepEqual(diagnosis.claims[0]?.evidenceIds, []);
+    assert.notEqual(diagnosis.diagnosis, 'ALLOW');
+  });
+
+  it('rejects a blank evidence id even when the array is non-empty', () => {
+    const parsed = AgentDiagnosisSchema.safeParse({
+      runId,
+      diagnosis: 'SUCCESS',
+      summary: 'Blank evidence id.',
+      claims: [{ text: 'The order exists.', evidenceIds: [''] }],
+      missingEvidence: [],
+      needsHumanReview: true,
+    });
+    assert.equal(parsed.success, false);
+  });
+
   it('rejects a checkout request with four line items', () => {
     const parsed = CheckoutRequestSchema.safeParse({
       runId,
@@ -58,17 +88,49 @@ describe('shared contracts', () => {
     assert.equal(parsed.success, false);
   });
 
-  it('rejects a claim with no evidence id and a fourth line item', () => {
-    const claim = AgentDiagnosisSchema.safeParse({
+  it('rejects duplicate SKUs, oversized SKUs, and quantities outside 1..99', () => {
+    const duplicate = CheckoutRequestSchema.safeParse({
       runId,
-      diagnosis: 'SUCCESS',
-      summary: 'Unsupported claim.',
-      claims: [{ text: 'The order exists.', evidenceIds: [] }],
-      missingEvidence: [],
-      needsHumanReview: true,
+      items: [
+        { sku: 'SKU-MUG', quantity: 1 },
+        { sku: 'SKU-MUG', quantity: 2 },
+      ],
     });
-    assert.equal(claim.success, false);
+    assert.equal(duplicate.success, false);
 
+    const longSku = CheckoutRequestSchema.safeParse({
+      runId,
+      items: [{ sku: 'S'.repeat(SKU_MAX_LENGTH + 1), quantity: 1 }],
+    });
+    assert.equal(longSku.success, false);
+
+    const zeroQuantity = CheckoutRequestSchema.safeParse({
+      runId,
+      items: [{ sku: 'SKU-MUG', quantity: 0 }],
+    });
+    assert.equal(zeroQuantity.success, false);
+
+    const overflowQuantity = CheckoutRequestSchema.safeParse({
+      runId,
+      items: [{ sku: 'SKU-MUG', quantity: QUANTITY_MAX + 1 }],
+    });
+    assert.equal(overflowQuantity.success, false);
+
+    const duplicateOrder = OrderRecordSchema.safeParse({
+      orderId: '22222222-2222-4222-8222-222222222222',
+      runId,
+      totalCents: 100,
+      currency: 'USD',
+      createdAt: observedAt,
+      items: [
+        { sku: 'SKU-MUG', quantity: 1, unitPriceCents: 50 },
+        { sku: 'SKU-MUG', quantity: 1, unitPriceCents: 50 },
+      ],
+    });
+    assert.equal(duplicateOrder.success, false);
+  });
+
+  it('rejects a fourth persisted line item', () => {
     const order = OrderRecordSchema.safeParse({
       orderId: '22222222-2222-4222-8222-222222222222',
       runId,
@@ -83,6 +145,31 @@ describe('shared contracts', () => {
       ],
     });
     assert.equal(order.success, false);
+  });
+
+  it('parses the minimal VerificationResult and EvalCase contracts', () => {
+    const verification = VerificationResultSchema.parse({
+      verificationId: 'verification-1',
+      runId,
+      status: 'CONFIRMED',
+      checkedAt: observedAt,
+      details: 'Authoritative order row matched the confirmation.',
+    });
+    const evalCase = EvalCaseSchema.parse({
+      caseId: 'normal-persisted-1',
+      scenario: 'NORMAL',
+      expectedDiagnosis: 'SUCCESS',
+      expectedVerification: 'CONFIRMED',
+      expectedGate: 'ALLOW',
+    });
+
+    assert.equal(verification.status, 'CONFIRMED');
+    assert.equal(evalCase.expectedGate, 'ALLOW');
+    assert.equal(EvalCaseSchema.safeParse({ ...evalCase, expectedGate: 'PASS' }).success, false);
+    assert.equal(
+      VerificationResultSchema.safeParse({ ...verification, status: 'UNVERIFIED' }).success,
+      false,
+    );
   });
 
   it('keeps UNKNOWN distinct from DEFECT and rejects MISSING', () => {
