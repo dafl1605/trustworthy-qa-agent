@@ -49,7 +49,7 @@ describe('shared contracts', () => {
     assert.equal(decision.decision, 'BLOCK');
   });
 
-  it('parses a claim with empty evidenceIds as UNVERIFIED input, not as a gate ALLOW', () => {
+  it('parses an AgentDiagnosis whose claim has an empty evidenceIds array', () => {
     const diagnosis = AgentDiagnosisSchema.parse({
       runId,
       diagnosis: 'SUCCESS',
@@ -60,7 +60,6 @@ describe('shared contracts', () => {
     });
 
     assert.deepEqual(diagnosis.claims[0]?.evidenceIds, []);
-    assert.notEqual(diagnosis.diagnosis, 'ALLOW');
   });
 
   it('rejects a blank evidence id even when the array is non-empty', () => {
@@ -170,6 +169,62 @@ describe('shared contracts', () => {
       VerificationResultSchema.safeParse({ ...verification, status: 'UNVERIFIED' }).success,
       false,
     );
+  });
+
+  it('accepts one decision-matrix EvalCase per scenario', () => {
+    const normal = EvalCaseSchema.parse({
+      caseId: 'normal-1',
+      scenario: 'NORMAL',
+      expectedDiagnosis: 'SUCCESS',
+      expectedVerification: 'CONFIRMED',
+      expectedGate: 'ALLOW',
+    });
+    const ghost = EvalCaseSchema.parse({
+      caseId: 'ghost-1',
+      scenario: 'GHOST_SUCCESS',
+      expectedDiagnosis: 'ORDER_NOT_PERSISTED',
+      expectedVerification: 'DEFECT',
+      expectedGate: 'BLOCK',
+    });
+    const unavailable = EvalCaseSchema.parse({
+      caseId: 'unavailable-1',
+      scenario: 'VERIFICATION_UNAVAILABLE',
+      expectedDiagnosis: 'INCONCLUSIVE',
+      expectedVerification: 'UNKNOWN',
+      expectedGate: 'HOLD',
+    });
+
+    assert.equal(normal.expectedGate, 'ALLOW');
+    assert.equal(ghost.expectedVerification, 'DEFECT');
+    assert.equal(unavailable.expectedGate, 'HOLD');
+  });
+
+  it('rejects EvalCase labels that contradict the decision matrix', () => {
+    const unknownAllow = EvalCaseSchema.safeParse({
+      caseId: 'unknown-allow',
+      scenario: 'VERIFICATION_UNAVAILABLE',
+      expectedDiagnosis: 'INCONCLUSIVE',
+      expectedVerification: 'UNKNOWN',
+      expectedGate: 'ALLOW',
+    });
+    const ghostConfirmed = EvalCaseSchema.safeParse({
+      caseId: 'ghost-confirmed',
+      scenario: 'GHOST_SUCCESS',
+      expectedDiagnosis: 'SUCCESS',
+      expectedVerification: 'CONFIRMED',
+      expectedGate: 'ALLOW',
+    });
+    const unavailableBlock = EvalCaseSchema.safeParse({
+      caseId: 'unavailable-block',
+      scenario: 'VERIFICATION_UNAVAILABLE',
+      expectedDiagnosis: 'INCONCLUSIVE',
+      expectedVerification: 'UNKNOWN',
+      expectedGate: 'BLOCK',
+    });
+
+    assert.equal(unknownAllow.success, false);
+    assert.equal(ghostConfirmed.success, false);
+    assert.equal(unavailableBlock.success, false);
   });
 
   it('keeps UNKNOWN distinct from DEFECT and rejects MISSING', () => {

@@ -153,16 +153,38 @@ export const VerificationResultSchema = z.object({
   details: z.string().min(1),
 });
 
+const VERIFICATION_FOR_SCENARIO = {
+  NORMAL: 'CONFIRMED',
+  GHOST_SUCCESS: 'DEFECT',
+  VERIFICATION_UNAVAILABLE: 'UNKNOWN',
+} as const;
+
+const GATE_FOR_VERIFICATION = {
+  CONFIRMED: 'ALLOW',
+  DEFECT: 'BLOCK',
+  UNKNOWN: 'HOLD',
+} as const;
+
 /**
  * Labeled eval fixture. Runtime runner and dataset work are QA-13/QA-14.
+ * Labels must follow the decision matrix; this is not a running gate.
  */
-export const EvalCaseSchema = z.object({
-  caseId: z.string().min(1),
-  scenario: TestScenarioSchema,
-  expectedDiagnosis: DiagnosisSchema,
-  expectedVerification: VerificationStatusSchema,
-  expectedGate: GateSchema,
-});
+export const EvalCaseSchema = z
+  .object({
+    caseId: z.string().min(1),
+    scenario: TestScenarioSchema,
+    expectedDiagnosis: DiagnosisSchema,
+    expectedVerification: VerificationStatusSchema,
+    expectedGate: GateSchema,
+  })
+  .refine(
+    (value) => VERIFICATION_FOR_SCENARIO[value.scenario] === value.expectedVerification,
+    { message: 'expectedVerification must match the scenario decision matrix' },
+  )
+  .refine(
+    (value) => GATE_FOR_VERIFICATION[value.expectedVerification] === value.expectedGate,
+    { message: 'expectedGate must match the verification decision matrix' },
+  );
 
 export type TestScenario = z.infer<typeof TestScenarioSchema>;
 export type Gate = z.infer<typeof GateSchema>;
