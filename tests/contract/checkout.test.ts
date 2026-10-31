@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import { once } from 'node:events';
 import { mkdtempSync, rmSync } from 'node:fs';
 import type { Server } from 'node:http';
+import net from 'node:net';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { describe, it } from 'node:test';
@@ -42,6 +43,22 @@ async function withApi(run: (baseUrl: string, db: ApiDatabase) => Promise<void>)
 function orderCount(db: ApiDatabase): number {
   const row = db.prepare('SELECT COUNT(*) AS count FROM orders').get() as { count: number };
   return row.count;
+}
+
+function rawRequest(port: number, requestTarget: string): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const socket = net.connect({ host: '127.0.0.1', port }, () => {
+      socket.write(`GET ${requestTarget} HTTP/1.1\r\nHost: 127.0.0.1\r\nConnection: close\r\n\r\n`);
+    });
+    const chunks: Buffer[] = [];
+    socket.on('data', (chunk: Buffer) => {
+      chunks.push(chunk);
+    });
+    socket.on('error', reject);
+    socket.on('end', () => {
+      resolve(Buffer.concat(chunks).toString('utf8'));
+    });
+  });
 }
 
 function postCheckout(baseUrl: string, body: unknown, search = ''): Promise<Response> {
@@ -408,6 +425,20 @@ describe('checkout API', () => {
       server.close();
       await once(server, 'close');
     }
+  });
+
+  it('returns 400 invalid_request for a malformed request target', async () => {
+    await withApi(async (baseUrl) => {
+      const health = await fetch(`${baseUrl}/health`);
+      assert.equal(health.status, 200);
+
+      const port = Number(new URL(baseUrl).port);
+      const raw = await rawRequest(port, '//[');
+      const [head, body = ''] = raw.split('\r\n\r\n');
+      assert.match(head ?? '', /^HTTP\/1\.1 400\b/);
+      assert.match(head ?? '', /content-type: application\/json/i);
+      assert.deepEqual(JSON.parse(body), { error: 'invalid_request' });
+    });
   });
 
   it('rejects the wrong method and unknown paths', async () => {

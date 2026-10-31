@@ -49,6 +49,8 @@ QA-02 mounts the baseline business routes. `createApp({ database })` prepares an
 
 Query parameters and extra JSON fields cannot select a scenario. `?scenario=GHOST_SUCCESS` still persists. The public API does not accept a fault toggle.
 
+A request-target that cannot be parsed as a URL, such as `//[`, returns 400 `{ error: "invalid_request" }` before any route runs. Valid paths and query strings keep their existing responses. A closed database during checkout is still a failed write: 5xx, no confirmation, and no new rows. Mapping that failure to 503 `persistence_unavailable` is decision D-01 and is not applied.
+
 ## Checkout persistence
 
 Column names are snake_case. Shared order objects are camelCase. The mapping lives in `apps/api/src/orders/sqlite-store.ts`. Inserts use bound parameters inside one `better-sqlite3` transaction. A trigger or constraint failure rolls the transaction back, and the HTTP response is 500 `{ error: "internal_error" }` with no confirmation body.

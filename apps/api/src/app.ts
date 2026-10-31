@@ -244,9 +244,21 @@ function handleOrder(res: ServerResponse, store: OrderStore | undefined, rawOrde
   }
 }
 
+function requestPath(url: string | undefined): string | undefined {
+  try {
+    return new URL(url ?? '/', 'http://127.0.0.1').pathname;
+  } catch {
+    return undefined;
+  }
+}
+
 async function handle(req: IncomingMessage, res: ServerResponse, store: OrderStore | undefined): Promise<void> {
   const method = req.method ?? 'GET';
-  const path = new URL(req.url ?? '/', 'http://127.0.0.1').pathname;
+  const path = requestPath(req.url);
+  if (path === undefined) {
+    sendJson(res, 400, { error: 'invalid_request' });
+    return;
+  }
 
   if (method === 'GET' && path === '/health') {
     sendJson(
