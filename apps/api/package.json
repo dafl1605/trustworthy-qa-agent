@@ -1,0 +1,31 @@
+{
+  "name": "@tqa/api",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./migrate": {
+      "types": "./dist/db/migrate.d.ts",
+      "import": "./dist/db/migrate.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json --declaration --declarationMap",
+    "typecheck": "pnpm --filter @tqa/shared build && tsc -p tsconfig.json --noEmit",
+    "start": "node dist/main.js",
+    "db:migrate": "node dist/db/cli.js"
+  },
+  "dependencies": {
+    "@tqa/shared": "workspace:*",
+    "better-sqlite3": "13.0.3"
+  },
+  "devDependencies": {
+    "@types/better-sqlite3": "9.6.0",
+    "@types/node": "catalog:",
+    "typescript": "catalog:"
+  }
+}

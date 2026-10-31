@@ -1,0 +1,26 @@
+{
+  "name": "trustworthy-qa-agent",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "packageManager": "pnpm@10.33.4",
+  "engines": {
+    "node": ">=22.13.0",
+    "pnpm": ">=10.33.4"
+  },
+  "scripts": {
+    "build": "pnpm --filter @tqa/shared build && pnpm --filter @tqa/api build && pnpm --filter @tqa/storefront build",
+    "typecheck": "pnpm --filter @tqa/shared build && pnpm --filter @tqa/api build && pnpm --filter @tqa/storefront typecheck && tsc -p tests/tsconfig.json --noEmit",
+    "test": "pnpm run build && tsc -p tests/tsconfig.json --noEmit && node --experimental-strip-types --test tests/contract/*.test.ts",
+    "db:migrate": "pnpm --filter @tqa/api db:migrate"
+  },
+  "devDependencies": {
+    "@tqa/api": "workspace:*",
+    "@tqa/shared": "workspace:*",
+    "@types/node": "catalog:",
+    "typescript": "catalog:"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": ["better-sqlite3"]
+  }
+}

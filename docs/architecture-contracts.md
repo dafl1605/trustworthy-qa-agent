@@ -33,7 +33,7 @@ interface EvidenceRecord {
   artifactUri?: string;
 }
 interface AgentDiagnosis {
-  runId: string;
+  runId: string; // UUID
   diagnosis: Diagnosis;
   summary: string;
   claims: { text: string; evidenceIds: string[] }[];
@@ -41,14 +41,32 @@ interface AgentDiagnosis {
   needsHumanReview: boolean;
 }
 interface GateDecision {
-  runId: string;
+  runId: string; // UUID
   decision: Gate;
   reasonCodes: string[];
   verificationId: string;
   policyVersion: string;
 }
+interface VerificationResult {
+  verificationId: string;
+  runId: string; // UUID
+  status: VerificationStatus;
+  checkedAt: string;
+  details: string;
+}
+interface EvalCase {
+  caseId: string;
+  scenario: TestScenario;
+  expectedDiagnosis: Diagnosis;
+  expectedVerification: VerificationStatus;
+  expectedGate: Gate;
+}
 ```
-Define full runtime validation schemas in code, not only TypeScript interfaces. Order total is computed in server-side integer cents; correlation IDs are required for every investigation.
+Define full runtime validation schemas in code, not only TypeScript interfaces. Order total is computed in server-side integer cents; `runId` and `orderId` are UUIDs. Checkout and persisted line items are 1–3 unique SKUs, each SKU at most 64 characters, quantity 1–99.
+
+`VerificationResult` and `EvalCase` are contract-only in QA-01. Validator behavior is QA-11/QA-12. Eval fixtures and the runner are QA-13/QA-14. Do not treat these schemas as a running validator or eval.
+
+A claim with empty `evidenceIds` is UNVERIFIED. Claims that cite evidence still need those IDs to exist and to support the text. An LLM claim never independently authorizes `ALLOW`.
 
 ## Decision matrix
 | Authoritative state | LLM report | Validator | Gate |
@@ -57,4 +75,4 @@ Define full runtime validation schemas in code, not only TypeScript interfaces. 
 | Missing due to GHOST_SUCCESS | Correct or wrong | DEFECT | BLOCK |
 | Query unavailable | Any | UNKNOWN | HOLD |
 
-Do **not** mistake `UNKNOWN` for `DEFECT`. Agent accuracy is evaluated separately from gate correctness.
+Do **not** mistake `UNKNOWN` for `DEFECT`. Agent accuracy is evaluated separately from gate correctness. A passing test suite does not auto-approve a release or a quality-gate `ALLOW`.

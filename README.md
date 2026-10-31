@@ -7,7 +7,26 @@ A reference repository operating kit for the BrowserStack talk **Who Tests the A
 
 The package provides: AI-Native SDLC intent/spec, repository guardrails, four domain skills, Cursor Cloud implementation instructions, Claude Code Web independent-review instructions, protected-main GitHub ruleset guide, and daily task templates.
 
-It **does not** yet include a finished application, working agent, test executions or measured performance results. Cursor will build the source code beginning with QA-01.
+After **QA-01**, the repo includes a pnpm monorepo scaffold (`apps/storefront`, `apps/api`, `packages/shared`) without checkout, fault injection, or agent behavior yet.
+
+## Requirements
+
+- Node.js `>=22.13.0` (verified on `22.23.4`)
+- pnpm `10.33.4` (`packageManager` in `package.json`)
+- `runId` and `orderId` are UUIDs (Zod `z.uuid()` at shared contract boundaries)
+
+## Local commands (after QA-01)
+
+```bash
+pnpm install
+pnpm typecheck
+pnpm build
+pnpm test
+pnpm db:migrate
+pnpm --filter @tqa/api start   # GET /health on 127.0.0.1:3001
+```
+
+See [`docs/architecture.md`](docs/architecture.md) for layout and ADRs.
 
 - Cursor: [`docs/platforms/cursor/START_CURSOR.md`](docs/platforms/cursor/START_CURSOR.md)
 - Claude: [`docs/platforms/claude/START_CLAUDE.md`](docs/platforms/claude/START_CLAUDE.md)

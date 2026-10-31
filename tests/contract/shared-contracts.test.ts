@@ -1,0 +1,276 @@
+import assert from 'node:assert/strict';
+import { describe, it } from 'node:test';
+import {
+  AgentDiagnosisSchema,
+  CheckoutRequestSchema,
+  EvalCaseSchema,
+  EvidenceRecordSchema,
+  GateDecisionSchema,
+  OrderLookupResultSchema,
+  OrderRecordSchema,
+  PRODUCT_FIXTURES,
+  ProductSchema,
+  QUANTITY_MAX,
+  SKU_MAX_LENGTH,
+  VerificationResultSchema,
+  VerificationStatusSchema,
+} from '@tqa/shared';
+
+const runId = '11111111-1111-4111-8111-111111111111';
+const observedAt = '2026-10-30T23:41:08.000Z';
+
+describe('shared contracts', () => {
+  it('accepts an evidence record, a diagnosis, and a gate decision', () => {
+    const evidence = EvidenceRecordSchema.parse({
+      evidenceId: 'evidence-1',
+      runId,
+      source: 'db',
+      observedAt,
+      kind: 'order-lookup',
+      summary: 'Order row was read from SQLite.',
+    });
+    const diagnosis = AgentDiagnosisSchema.parse({
+      runId,
+      diagnosis: 'ORDER_NOT_PERSISTED',
+      summary: 'The order id was not in the database.',
+      claims: [{ text: 'No matching order row.', evidenceIds: [evidence.evidenceId] }],
+      missingEvidence: [],
+      needsHumanReview: false,
+    });
+    const decision = GateDecisionSchema.parse({
+      runId,
+      decision: 'BLOCK',
+      reasonCodes: ['ORDER_ABSENT'],
+      verificationId: 'verification-1',
+      policyVersion: '0',
+    });
+
+    assert.equal(diagnosis.claims[0]?.evidenceIds[0], evidence.evidenceId);
+    assert.equal(decision.decision, 'BLOCK');
+  });
+
+  it('parses an AgentDiagnosis whose claim has an empty evidenceIds array', () => {
+    const diagnosis = AgentDiagnosisSchema.parse({
+      runId,
+      diagnosis: 'SUCCESS',
+      summary: 'Unsupported claim.',
+      claims: [{ text: 'The order exists.', evidenceIds: [] }],
+      missingEvidence: ['order-row'],
+      needsHumanReview: true,
+    });
+
+    assert.deepEqual(diagnosis.claims[0]?.evidenceIds, []);
+  });
+
+  it('rejects a blank evidence id even when the array is non-empty', () => {
+    const parsed = AgentDiagnosisSchema.safeParse({
+      runId,
+      diagnosis: 'SUCCESS',
+      summary: 'Blank evidence id.',
+      claims: [{ text: 'The order exists.', evidenceIds: [''] }],
+      missingEvidence: [],
+      needsHumanReview: true,
+    });
+    assert.equal(parsed.success, false);
+  });
+
+  it('rejects a checkout request with four line items', () => {
+    const parsed = CheckoutRequestSchema.safeParse({
+      runId,
+      items: [
+        { sku: 'sku-1', quantity: 1 },
+        { sku: 'sku-2', quantity: 1 },
+        { sku: 'sku-3', quantity: 1 },
+        { sku: 'sku-4', quantity: 1 },
+      ],
+    });
+    assert.equal(parsed.success, false);
+  });
+
+  it('rejects duplicate SKUs, oversized SKUs, and quantities outside 1..99', () => {
+    const duplicate = CheckoutRequestSchema.safeParse({
+      runId,
+      items: [
+        { sku: 'SKU-MUG', quantity: 1 },
+        { sku: 'SKU-MUG', quantity: 2 },
+      ],
+    });
+    assert.equal(duplicate.success, false);
+
+    const longSku = CheckoutRequestSchema.safeParse({
+      runId,
+      items: [{ sku: 'S'.repeat(SKU_MAX_LENGTH + 1), quantity: 1 }],
+    });
+    assert.equal(longSku.success, false);
+
+    const zeroQuantity = CheckoutRequestSchema.safeParse({
+      runId,
+      items: [{ sku: 'SKU-MUG', quantity: 0 }],
+    });
+    assert.equal(zeroQuantity.success, false);
+
+    const overflowQuantity = CheckoutRequestSchema.safeParse({
+      runId,
+      items: [{ sku: 'SKU-MUG', quantity: QUANTITY_MAX + 1 }],
+    });
+    assert.equal(overflowQuantity.success, false);
+
+    const duplicateOrder = OrderRecordSchema.safeParse({
+      orderId: '22222222-2222-4222-8222-222222222222',
+      runId,
+      totalCents: 100,
+      currency: 'USD',
+      createdAt: observedAt,
+      items: [
+        { sku: 'SKU-MUG', quantity: 1, unitPriceCents: 50 },
+        { sku: 'SKU-MUG', quantity: 1, unitPriceCents: 50 },
+      ],
+    });
+    assert.equal(duplicateOrder.success, false);
+  });
+
+  it('rejects a fourth persisted line item', () => {
+    const order = OrderRecordSchema.safeParse({
+      orderId: '22222222-2222-4222-8222-222222222222',
+      runId,
+      totalCents: 100,
+      currency: 'USD',
+      createdAt: observedAt,
+      items: [
+        { sku: 'sku-1', quantity: 1, unitPriceCents: 25 },
+        { sku: 'sku-2', quantity: 1, unitPriceCents: 25 },
+        { sku: 'sku-3', quantity: 1, unitPriceCents: 25 },
+        { sku: 'sku-4', quantity: 1, unitPriceCents: 25 },
+      ],
+    });
+    assert.equal(order.success, false);
+  });
+
+  it('parses the minimal VerificationResult and EvalCase contracts', () => {
+    const verification = VerificationResultSchema.parse({
+      verificationId: 'verification-1',
+      runId,
+      status: 'CONFIRMED',
+      checkedAt: observedAt,
+      details: 'Authoritative order row matched the confirmation.',
+    });
+    const evalCase = EvalCaseSchema.parse({
+      caseId: 'normal-persisted-1',
+      scenario: 'NORMAL',
+      expectedDiagnosis: 'SUCCESS',
+      expectedVerification: 'CONFIRMED',
+      expectedGate: 'ALLOW',
+    });
+
+    assert.equal(verification.status, 'CONFIRMED');
+    assert.equal(evalCase.expectedGate, 'ALLOW');
+    assert.equal(EvalCaseSchema.safeParse({ ...evalCase, expectedGate: 'PASS' }).success, false);
+    assert.equal(
+      VerificationResultSchema.safeParse({ ...verification, status: 'UNVERIFIED' }).success,
+      false,
+    );
+  });
+
+  it('accepts one decision-matrix EvalCase per scenario', () => {
+    const normal = EvalCaseSchema.parse({
+      caseId: 'normal-1',
+      scenario: 'NORMAL',
+      expectedDiagnosis: 'SUCCESS',
+      expectedVerification: 'CONFIRMED',
+      expectedGate: 'ALLOW',
+    });
+    const ghost = EvalCaseSchema.parse({
+      caseId: 'ghost-1',
+      scenario: 'GHOST_SUCCESS',
+      expectedDiagnosis: 'ORDER_NOT_PERSISTED',
+      expectedVerification: 'DEFECT',
+      expectedGate: 'BLOCK',
+    });
+    const unavailable = EvalCaseSchema.parse({
+      caseId: 'unavailable-1',
+      scenario: 'VERIFICATION_UNAVAILABLE',
+      expectedDiagnosis: 'INCONCLUSIVE',
+      expectedVerification: 'UNKNOWN',
+      expectedGate: 'HOLD',
+    });
+
+    assert.equal(normal.expectedGate, 'ALLOW');
+    assert.equal(ghost.expectedVerification, 'DEFECT');
+    assert.equal(unavailable.expectedGate, 'HOLD');
+  });
+
+  it('rejects EvalCase labels that contradict the decision matrix', () => {
+    const unknownAllow = EvalCaseSchema.safeParse({
+      caseId: 'unknown-allow',
+      scenario: 'VERIFICATION_UNAVAILABLE',
+      expectedDiagnosis: 'INCONCLUSIVE',
+      expectedVerification: 'UNKNOWN',
+      expectedGate: 'ALLOW',
+    });
+    const ghostConfirmed = EvalCaseSchema.safeParse({
+      caseId: 'ghost-confirmed',
+      scenario: 'GHOST_SUCCESS',
+      expectedDiagnosis: 'SUCCESS',
+      expectedVerification: 'CONFIRMED',
+      expectedGate: 'ALLOW',
+    });
+    const unavailableBlock = EvalCaseSchema.safeParse({
+      caseId: 'unavailable-block',
+      scenario: 'VERIFICATION_UNAVAILABLE',
+      expectedDiagnosis: 'INCONCLUSIVE',
+      expectedVerification: 'UNKNOWN',
+      expectedGate: 'BLOCK',
+    });
+
+    assert.equal(unknownAllow.success, false);
+    assert.equal(ghostConfirmed.success, false);
+    assert.equal(unavailableBlock.success, false);
+  });
+
+  it('keeps UNKNOWN distinct from DEFECT and rejects MISSING', () => {
+    assert.equal(VerificationStatusSchema.parse('UNKNOWN'), 'UNKNOWN');
+    assert.equal(VerificationStatusSchema.parse('DEFECT'), 'DEFECT');
+    assert.notEqual(
+      VerificationStatusSchema.parse('UNKNOWN'),
+      VerificationStatusSchema.parse('DEFECT'),
+    );
+    assert.equal(VerificationStatusSchema.safeParse('MISSING').success, false);
+  });
+
+  it('keeps UNAVAILABLE lookup as 503 and rejects collapsing it into 404', () => {
+    const orderId = '22222222-2222-4222-8222-222222222222';
+    const unavailable = OrderLookupResultSchema.parse({
+      code: 'UNAVAILABLE',
+      status: 503,
+      orderId,
+      reason: 'timeout',
+    });
+    assert.equal(unavailable.status, 503);
+    assert.equal(unavailable.code, 'UNAVAILABLE');
+
+    const absent = OrderLookupResultSchema.parse({
+      code: 'ABSENT',
+      status: 404,
+      orderId,
+    });
+    assert.equal(absent.status, 404);
+
+    assert.equal(
+      OrderLookupResultSchema.safeParse({
+        code: 'UNAVAILABLE',
+        status: 404,
+        orderId,
+        reason: 'timeout',
+      }).success,
+      false,
+    );
+  });
+
+  it('exposes three USD-priced catalog fixtures', () => {
+    assert.equal(PRODUCT_FIXTURES.length, 3);
+    for (const product of PRODUCT_FIXTURES) {
+      assert.equal(ProductSchema.parse(product).sku, product.sku);
+      assert.ok(product.priceCents > 0);
+    }
+  });
+});
