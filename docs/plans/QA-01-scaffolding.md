@@ -83,7 +83,7 @@ Historical sprint text places QA-01 on 2026-10-28. The repository had no applica
 
 ## Evidence and actual execution (filled after running)
 
-- Commands run and result: recorded in `docs/progress/2026-10-30.md` from the 2026-10-30 run. `pnpm typecheck`, `pnpm build`, `pnpm test` (9 passed, 0 failed), and `pnpm db:migrate` exited 0.
+- Commands run and result: recorded in `docs/progress/2026-10-30.md`. Latest re-check: `pnpm typecheck`, `pnpm build`, `pnpm test` (11 passed, 0 failed), and `pnpm db:migrate` exited 0.
 - Artifact paths: `docs/progress/2026-10-30.md`
 - Actual elapsed hours: about 15 minutes of wall clock (17:39–17:54 America/Mexico_City). This is not a claim that the 3h planning slot was saved.
 - Status: IN_REVIEW. Acceptance commands passed. Independent review of the PR head SHA has not happened, so this task is not DONE.
