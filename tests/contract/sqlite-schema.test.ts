@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
-import { applySchema, openDatabase } from '@tqa/api';
+import { applySchema, openDatabase } from '@tqa/api/migrate';
 
 describe('sqlite schema', () => {
   it('creates orders and order_items and keeps rows when applied twice', () => {
