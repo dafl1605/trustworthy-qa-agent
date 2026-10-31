@@ -9,6 +9,12 @@ The package provides: AI-Native SDLC intent/spec, repository guardrails, four do
 
 After **QA-01**, the repo includes a pnpm monorepo scaffold (`apps/storefront`, `apps/api`, `packages/shared`) without checkout, fault injection, or agent behavior yet.
 
+## Requirements
+
+- Node.js `>=22.13.0` (verified on `22.23.4`)
+- pnpm `10.33.4` (`packageManager` in `package.json`)
+- `runId` and `orderId` are UUIDs (Zod `z.uuid()` at shared contract boundaries)
+
 ## Local commands (after QA-01)
 
 ```bash

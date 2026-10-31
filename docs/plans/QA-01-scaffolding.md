@@ -45,12 +45,12 @@ Status: ACCEPTED for scaffolding only. The user task named this scope. Evidence 
 - Scaffold routes must not include checkout or order lookup. Those semantics belong to QA-02 and QA-05
 - Fault injection is not mounted. The harness decision is recorded for QA-05 and is not a public route
 - No change to NORMAL / GHOST_SUCCESS / VERIFICATION_UNAVAILABLE behavior, because that behavior does not exist yet
-- Human approval is not required for this scaffold. It is required before changing those fault semantics later
+- Passing scaffold checks do not auto-approve merge and do not authorize a quality-gate `ALLOW`. Independent review and a human merge decision are still required. Changing fault semantics later also needs human approval. An LLM claim never independently authorizes `ALLOW`.
 
 ## Tests before implementation
 
 - Positive: shared schemas accept one valid evidence record, diagnosis, and gate decision; schema migration creates both tables and keeps a row on a second apply; `GET /health` returns the shared health schema
-- Negative: invalid enums, empty claim evidence, negative money, foreign-key violations, and `/api/checkout` are rejected
+- Negative: invalid enums, blank evidence IDs, duplicate SKUs, over-limit quantities, negative money, foreign-key violations, and `/api/checkout` are rejected. Empty `evidenceIds` parse as UNVERIFIED input, not as a gate ALLOW.
 - Unknown: `VERIFICATION_UNAVAILABLE` is not implemented. The contract test only locks the word `UNKNOWN` as distinct from `DEFECT` and rejects a fake status such as `MISSING`
 
 ## Implementation steps
@@ -83,7 +83,8 @@ Historical sprint text places QA-01 on 2026-10-28. The repository had no applica
 
 ## Evidence and actual execution (filled after running)
 
-- Commands run and result: recorded in `docs/progress/2026-10-30.md`. Latest re-check: `pnpm typecheck`, `pnpm build`, `pnpm test` (11 passed, 0 failed), and `pnpm db:migrate` exited 0.
+- Commands run and result: recorded in `docs/progress/2026-10-30.md`.
+- Review-correction pass (America/Mexico_City 19:20 on 2026-10-30): `pnpm install --frozen-lockfile` exit 0; `pnpm typecheck` exit 0; `pnpm build` exit 0; `pnpm test` exit 0 (`tests 16`, `pass 16`, `fail 0`, `duration_ms 256.972017`); `DATABASE_PATH=/tmp/tqa-qa01-review.sqlite pnpm db:migrate` exit 0 twice; tables `order_items`, `orders`.
 - Artifact paths: `docs/progress/2026-10-30.md`
-- Actual elapsed hours: about 15 minutes of wall clock (17:39–17:54 America/Mexico_City). This is not a claim that the 3h planning slot was saved.
-- Status: IN_REVIEW. Acceptance commands passed. Independent review of the PR head SHA has not happened, so this task is not DONE.
+- Actual elapsed hours: about 15 minutes of wall clock (17:39–17:54 America/Mexico_City) for the original scaffold, plus this review-correction pass. This is not a claim that the 3h planning slot was saved.
+- Status: IN_REVIEW. Review corrections are on the feature branch. QA-01 is not DONE until the updated PR head SHA passes independent review and a human decides merge.

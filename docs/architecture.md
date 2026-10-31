@@ -2,13 +2,15 @@
 
 This note is the as-built skeleton. Observable product behavior still lives in `docs/spec.md`. Domain names live in `docs/architecture-contracts.md`. Foundation choices live in `docs/adr/0001-runtime-foundations.md`.
 
+Requires Node.js `>=22.13.0` (this VM: `22.23.4`) and pnpm `10.33.4`. `runId` and `orderId` are UUIDs validated by Zod `z.uuid()` at shared contract boundaries.
+
 ## Layout
 
 | Path | Role in QA-01 |
 |---|---|
 | `apps/storefront` | React + Vite placeholder. No catalog, cart, or checkout |
-| `apps/api` | Loopback Node.js server. `GET /health` only. SQLite schema applicator |
-| `packages/shared` | Zod schemas and inferred types for the MVP contracts |
+| `apps/api` | Loopback Node.js server. `GET /health` only. Schema apply lives on `@tqa/api/migrate` and the CLI, not the public package root |
+| `packages/shared` | Zod schemas and inferred types for the MVP contracts, including deferred `VerificationResult` and `EvalCase` |
 | `tests/contract` | Schema, migration, health, config, and log checks |
 | `tests/e2e` | Reserved for Playwright (QA-06). Empty |
 | `tests/evals` | Reserved for the eval runner (QA-14). Empty |
@@ -39,7 +41,7 @@ Supported commands from the repository root:
 
 ## SQLite
 
-`apps/api/db/schema.sql` is the initial schema. `applySchema()` executes that file and is idempotent (`IF NOT EXISTS`). It does not seed products and it does not delete rows.
+`apps/api/db/schema.sql` is the initial schema. `applySchema()` executes that file and is idempotent (`IF NOT EXISTS`). It does not seed products and it does not delete rows. The public `@tqa/api` entry exports `createApp`, `listen`, config readers, and `formatLog` only. Schema apply and `openDatabase` are CLI/test utilities on `@tqa/api/migrate`.
 
 `orders`: `order_id`, `run_id`, `total_cents` (>= 0), `currency` (`USD`), `created_at`.
 
@@ -56,15 +58,19 @@ Column names are snake_case. Shared order objects are camelCase. QA-02 owns the 
 - gate: `ALLOW`, `BLOCK`, `HOLD`
 - diagnosis: `SUCCESS`, `ORDER_NOT_PERSISTED`, `INCONCLUSIVE`, `OTHER`
 - `EvidenceRecord`, `AgentDiagnosis`, `GateDecision`
-- `OrderRecord` aligned with the table: integer cents, currency `USD`, 1 to 3 line items, UUID `runId` and `orderId`
+- `VerificationResult` and `EvalCase` (minimal shapes only; no validator or eval runner)
+- `OrderRecord` aligned with the table: integer cents, currency `USD`, 1 to 3 unique line items, UUID `runId` and `orderId`
 - `CheckoutRequest`, `Product`, `CheckoutConfirmation`, and `OrderLookupResult` describe later HTTP shapes. `OrderLookupResult` encodes FOUND/200, ABSENT/404, and UNAVAILABLE/503 so UNKNOWN cannot be stored as a missing order. No route implements them yet
+- Checkout and order items reject duplicate SKUs, SKUs longer than 64 characters, and quantities outside 1–99
 - `PRODUCT_FIXTURES` is three catalog SKUs with integer-cent prices. Products are not a SQLite table.
 
-Each diagnosis claim needs at least one `evidenceId`. `UNKNOWN` is its own verification status. Nothing in this package decides the gate. The decision matrix stays policy for QA-12.
+A diagnosis claim may have an empty `evidenceIds` array. That claim is UNVERIFIED. Claims that cite evidence still need those IDs to exist and to support the text. An LLM claim never independently authorizes `ALLOW`. `UNKNOWN` is its own verification status. Nothing in this package decides the gate. The decision matrix stays policy for QA-12.
+
+Passing typecheck, build, or contract tests does not auto-approve merge and does not authorize a quality-gate `ALLOW`. A human decides merge.
 
 ## Harness and faults
 
-No fault-injection route is registered. ADR 0001 records the loopback plus test-process secret rules QA-05 must implement.
+No fault-injection route is registered. The harness stays disabled by default and is not implemented in QA-01. ADR 0001 records the loopback, default-off, timing-safe token comparison, and never-log-token rules QA-05 must implement. Those security controls have not been verified in this task.
 
 ## Explicitly absent
 
