@@ -22,7 +22,7 @@ async function withServer(run: (baseUrl: string) => Promise<void>): Promise<void
 }
 
 describe('api scaffold', () => {
-  it('serves GET /health and does not mount business routes', async () => {
+  it('serves GET /health on loopback and leaves unknown paths unmatched', async () => {
     await withServer(async (baseUrl) => {
       const health = await fetch(`${baseUrl}/health`);
       assert.equal(health.status, 200);
@@ -32,11 +32,9 @@ describe('api scaffold', () => {
         service: 'trustworthy-qa-api',
       });
 
-      for (const path of ['/api/products', '/api/checkout', '/api/orders/order-1']) {
-        const response = await fetch(`${baseUrl}${path}`, { method: path.includes('checkout') ? 'POST' : 'GET' });
-        assert.equal(response.status, 404);
-        assert.deepEqual(await response.json(), { error: 'not_found' });
-      }
+      const missing = await fetch(`${baseUrl}/no-such-route`);
+      assert.equal(missing.status, 404);
+      assert.deepEqual(await missing.json(), { error: 'not_found' });
     });
   });
 });
