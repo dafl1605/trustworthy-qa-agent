@@ -7,7 +7,9 @@ A reference repository operating kit for the BrowserStack talk **Who Tests the A
 
 The package provides: AI-Native SDLC intent/spec, repository guardrails, four domain skills, Cursor Cloud implementation instructions, Claude Code Web independent-review instructions, protected-main GitHub ruleset guide, and daily task templates.
 
-After **QA-01**, the repo includes a pnpm monorepo scaffold (`apps/storefront`, `apps/api`, `packages/shared`) without checkout, fault injection, or agent behavior yet.
+After **QA-01**, the repo includes a pnpm monorepo scaffold (`apps/storefront`, `apps/api`, `packages/shared`).
+
+After **QA-02**, the API serves `GET /api/products`, `POST /api/checkout`, and `GET /api/orders/:orderId`. A normal checkout is persisted in SQLite before the confirmation response. The storefront is still a placeholder. Fault injection is not mounted.
 
 ## Requirements
 
@@ -23,7 +25,7 @@ pnpm typecheck
 pnpm build
 pnpm test
 pnpm db:migrate
-pnpm --filter @tqa/api start   # GET /health on 127.0.0.1:3001
+pnpm --filter @tqa/api start   # loopback API on 127.0.0.1:3001
 ```
 
 See [`docs/architecture.md`](docs/architecture.md) for layout and ADRs.
