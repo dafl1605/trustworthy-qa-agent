@@ -5,7 +5,10 @@ import {
   EvidenceRecordSchema,
   GateDecisionSchema,
   CheckoutRequestSchema,
+  OrderLookupResultSchema,
   OrderRecordSchema,
+  PRODUCT_FIXTURES,
+  ProductSchema,
   VerificationStatusSchema,
 } from '@tqa/shared';
 
@@ -90,5 +93,42 @@ describe('shared contracts', () => {
       VerificationStatusSchema.parse('DEFECT'),
     );
     assert.equal(VerificationStatusSchema.safeParse('MISSING').success, false);
+  });
+
+  it('keeps UNAVAILABLE lookup as 503 and rejects collapsing it into 404', () => {
+    const orderId = '22222222-2222-4222-8222-222222222222';
+    const unavailable = OrderLookupResultSchema.parse({
+      code: 'UNAVAILABLE',
+      status: 503,
+      orderId,
+      reason: 'timeout',
+    });
+    assert.equal(unavailable.status, 503);
+    assert.equal(unavailable.code, 'UNAVAILABLE');
+
+    const absent = OrderLookupResultSchema.parse({
+      code: 'ABSENT',
+      status: 404,
+      orderId,
+    });
+    assert.equal(absent.status, 404);
+
+    assert.equal(
+      OrderLookupResultSchema.safeParse({
+        code: 'UNAVAILABLE',
+        status: 404,
+        orderId,
+        reason: 'timeout',
+      }).success,
+      false,
+    );
+  });
+
+  it('exposes three USD-priced catalog fixtures', () => {
+    assert.equal(PRODUCT_FIXTURES.length, 3);
+    for (const product of PRODUCT_FIXTURES) {
+      assert.equal(ProductSchema.parse(product).sku, product.sku);
+      assert.ok(product.priceCents > 0);
+    }
   });
 });

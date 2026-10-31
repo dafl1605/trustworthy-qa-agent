@@ -95,6 +95,29 @@ export const CheckoutConfirmationSchema = z.object({
   totalCents: z.number().int().nonnegative(),
 });
 
+/**
+ * Authoritative order lookup. 404 ABSENT is a verified missing order.
+ * 503 UNAVAILABLE is UNKNOWN and must never be collapsed into ABSENT.
+ */
+export const OrderLookupResultSchema = z.discriminatedUnion('code', [
+  z.object({
+    code: z.literal('FOUND'),
+    status: z.literal(200),
+    order: OrderRecordSchema,
+  }),
+  z.object({
+    code: z.literal('ABSENT'),
+    status: z.literal(404),
+    orderId: z.uuid(),
+  }),
+  z.object({
+    code: z.literal('UNAVAILABLE'),
+    status: z.literal(503),
+    orderId: z.uuid(),
+    reason: z.enum(['timeout', 'service_unavailable']),
+  }),
+]);
+
 export type TestScenario = z.infer<typeof TestScenarioSchema>;
 export type Gate = z.infer<typeof GateSchema>;
 export type VerificationStatus = z.infer<typeof VerificationStatusSchema>;
@@ -109,3 +132,25 @@ export type CheckoutItem = z.infer<typeof CheckoutItemSchema>;
 export type CheckoutRequest = z.infer<typeof CheckoutRequestSchema>;
 export type Product = z.infer<typeof ProductSchema>;
 export type CheckoutConfirmation = z.infer<typeof CheckoutConfirmationSchema>;
+export type OrderLookupResult = z.infer<typeof OrderLookupResultSchema>;
+
+export const PRODUCT_FIXTURES: readonly Product[] = [
+  {
+    sku: 'SKU-MUG',
+    name: 'Ceramic Mug',
+    description: 'Demo mug. No real storefront catalog yet.',
+    priceCents: 1299,
+  },
+  {
+    sku: 'SKU-TEE',
+    name: 'Cotton T-Shirt',
+    description: 'Demo shirt. Price is integer cents.',
+    priceCents: 2499,
+  },
+  {
+    sku: 'SKU-STK',
+    name: 'Sticker Pack',
+    description: 'Demo stickers. Three fixtures total.',
+    priceCents: 399,
+  },
+];
