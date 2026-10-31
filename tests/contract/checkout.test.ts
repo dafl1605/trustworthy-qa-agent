@@ -344,9 +344,9 @@ describe('checkout API', () => {
         runId,
         items: [{ sku: 'SKU-MUG', quantity: 1 }],
       });
-      // D-01 is still open, so this locks the invariant and not 500 versus 503.
-      assert.ok(response.status >= 500 && response.status <= 599);
+      assert.equal(response.status, 503);
       const body: unknown = await response.json();
+      assert.deepEqual(body, { error: 'persistence_unavailable' });
       assert.equal(CheckoutConfirmationSchema.safeParse(body).success, false);
     } finally {
       server.close();

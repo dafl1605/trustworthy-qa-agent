@@ -16,6 +16,7 @@ import {
   createSqliteOrderStore,
   isSqliteError,
   OrderReadUnavailableError,
+  PersistenceUnavailableError,
   type OrderStore,
 } from './orders/sqlite-store.js';
 
@@ -163,6 +164,11 @@ async function handleCheckout(
     // for GHOST_SUCCESS. This route has no scenario switch.
     store.persist(order);
   } catch (error) {
+    if (error instanceof PersistenceUnavailableError) {
+      log('error', 'api.checkout_unavailable', { code: 'DB_NOT_OPEN' });
+      sendJson(res, 503, { error: 'persistence_unavailable' });
+      return;
+    }
     if (isSqliteError(error)) {
       log('error', 'api.checkout_persist_failed', { runId: order.runId, code: error.code });
       sendJson(res, 500, { error: 'internal_error' });

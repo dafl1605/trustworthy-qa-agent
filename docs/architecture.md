@@ -44,12 +44,12 @@ QA-02 mounts the baseline business routes. `createApp({ database })` prepares an
 | Route | Success | Failure |
 |---|---|---|
 | `GET /api/products` | 200 `{ products }` from `PRODUCT_FIXTURES`. Prices are integer cents. There is no products table | Other methods: 405 |
-| `POST /api/checkout` | 200 `CheckoutConfirmation` only after `orders` and `order_items` commit. `totalCents` is `quantity * catalog price`. Extra client money fields are ignored. The message `Order confirmed` is the superficial confirmation and is not itself proof of persistence | 400 invalid body or unknown SKU. 500 if the write throws. 503 `{ error: "persistence_unavailable" }` when no database was configured. No `orderId` is returned unless the transaction committed |
+| `POST /api/checkout` | 200 `CheckoutConfirmation` only after `orders` and `order_items` commit. `totalCents` is `quantity * catalog price`. Extra client money fields are ignored. The message `Order confirmed` is the superficial confirmation and is not itself proof of persistence | 400 invalid body or unknown SKU. 500 `{ error: "internal_error" }` when a `SqliteError` is thrown, including a failed item insert or a dropped table. 503 `{ error: "persistence_unavailable" }` when no database was configured or the connection is not open. No `orderId` is returned unless the transaction committed |
 | `GET /api/orders/:orderId` | 200 `OrderLookupResult` `FOUND` from a separate `SELECT` | 404 `ABSENT` when the UUID is well formed and no row exists. 400 when the id is not a UUID. 503 `UNAVAILABLE` / `service_unavailable` when SQLite throws or no store is configured. 500 when a row exists but does not satisfy `OrderRecordSchema`. A read failure is never reported as `ABSENT` |
 
 Query parameters and extra JSON fields cannot select a scenario. `?scenario=GHOST_SUCCESS` still persists. The public API does not accept a fault toggle.
 
-A request-target that cannot be parsed as a URL, such as `//[`, returns 400 `{ error: "invalid_request" }` before any route runs. Valid paths and query strings keep their existing responses. A closed database during checkout is still a failed write: 5xx, no confirmation, and no new rows. Mapping that failure to 503 `persistence_unavailable` is decision D-01 and is not applied.
+A request-target that cannot be parsed as a URL, such as `//[`, returns 400 `{ error: "invalid_request" }` before any route runs. Valid paths and query strings keep their existing responses. A closed database during checkout returns 503 `{ error: "persistence_unavailable" }`, with no confirmation and no new rows. That 503 means persistence was unavailable. It is not a confirmed absence of an order. Decision D-01 option B is applied. A `SqliteError` during the write stays 500 `{ error: "internal_error" }`.
 
 ## Checkout persistence
 

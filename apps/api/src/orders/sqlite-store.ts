@@ -18,6 +18,13 @@ export class OrderReadUnavailableError extends Error {
   }
 }
 
+export class PersistenceUnavailableError extends Error {
+  constructor() {
+    super('Order persistence is unavailable');
+    this.name = 'PersistenceUnavailableError';
+  }
+}
+
 export function isSqliteError(error: unknown): error is Error & { code: string } {
   if (!(error instanceof Error) || error.name !== 'SqliteError') {
     return false;
@@ -139,7 +146,17 @@ export function createSqliteOrderStore(db: SqliteDatabase): OrderStore {
   return {
     persist(order: OrderRecord): void {
       const parsed = OrderRecordSchema.parse(order);
-      persistTx(parsed);
+      if (!db.open) {
+        throw new PersistenceUnavailableError();
+      }
+      try {
+        persistTx(parsed);
+      } catch (error) {
+        if (isClosedDatabaseError(error)) {
+          throw new PersistenceUnavailableError();
+        }
+        throw error;
+      }
     },
     findById(orderId: string): OrderRecord | null {
       if (!db.open) {
