@@ -1,6 +1,9 @@
 import assert from 'node:assert/strict';
 import { once } from 'node:events';
+import { mkdtempSync, rmSync } from 'node:fs';
 import type { Server } from 'node:http';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { describe, it } from 'node:test';
 import {
   CheckoutConfirmationSchema,
@@ -303,6 +306,45 @@ describe('checkout API', () => {
         reason: 'service_unavailable',
       });
     });
+  });
+
+  it('does not confirm a checkout when the database connection is closed', async () => {
+    const directory = mkdtempSync(join(tmpdir(), 'tqa-closed-db-'));
+    const filename = join(directory, 'orders.sqlite');
+    const db = openDatabase(filename);
+    applySchema(db);
+    assert.equal(orderCount(db), 0);
+    const server: Server = createApp({ database: db });
+    await listen(server, 0);
+    const address = server.address();
+    if (address === null || typeof address === 'string') {
+      throw new Error('Expected a loopback TCP address');
+    }
+    db.close();
+    try {
+      assert.equal(address.address, '127.0.0.1');
+      const response = await postCheckout(`http://127.0.0.1:${address.port}`, {
+        runId,
+        items: [{ sku: 'SKU-MUG', quantity: 1 }],
+      });
+      // D-01 is still open, so this locks the invariant and not 500 versus 503.
+      assert.ok(response.status >= 500 && response.status <= 599);
+      const body: unknown = await response.json();
+      assert.equal(CheckoutConfirmationSchema.safeParse(body).success, false);
+    } finally {
+      server.close();
+      await once(server, 'close');
+    }
+
+    const reader = openDatabase(filename);
+    try {
+      assert.equal(orderCount(reader), 0);
+      const items = reader.prepare('SELECT COUNT(*) AS count FROM order_items').get() as { count: number };
+      assert.equal(items.count, 0);
+    } finally {
+      reader.close();
+      rmSync(directory, { recursive: true, force: true });
+    }
   });
 
   it('reports a closed database as 503 UNAVAILABLE rather than 404 ABSENT', async () => {
