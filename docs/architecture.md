@@ -6,7 +6,7 @@ Requires Node.js `>=22.13.0` (this VM: `22.23.4`) and pnpm `10.33.4`. `runId` an
 
 ## Layout
 
-| Path | Role in QA-01 |
+| Path | Role |
 |---|---|
 | `apps/storefront` | React + Vite shell. Four named sections (catalog, cart, checkout, confirmation). None of them fetch products, keep a cart, or submit checkout |
 | `apps/api` | Loopback Node.js server. `GET /health`, fixture catalog, normal checkout persistence, and order lookup. Schema apply lives on `@tqa/api/migrate` and the CLI, not the public package root |
