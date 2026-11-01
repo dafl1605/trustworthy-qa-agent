@@ -1,4 +1,4 @@
-# Architecture — QA-01 scaffold and QA-02 checkout API
+# Architecture — QA-01 scaffold, QA-02 checkout API, QA-03 storefront shell
 
 This note is the as-built skeleton. Observable product behavior still lives in `docs/spec.md`. Domain names live in `docs/architecture-contracts.md`. Foundation choices live in `docs/adr/0001-runtime-foundations.md`.
 
@@ -6,9 +6,9 @@ Requires Node.js `>=22.13.0` (this VM: `22.23.4`) and pnpm `10.33.4`. `runId` an
 
 ## Layout
 
-| Path | Role in QA-01 |
+| Path | Role |
 |---|---|
-| `apps/storefront` | React + Vite placeholder. No catalog, cart, or checkout |
+| `apps/storefront` | React + Vite shell. Four named sections (catalog, cart, checkout, confirmation). None of them fetch products, keep a cart, or submit checkout |
 | `apps/api` | Loopback Node.js server. `GET /health`, fixture catalog, normal checkout persistence, and order lookup. Schema apply lives on `@tqa/api/migrate` and the CLI, not the public package root |
 | `packages/shared` | Zod schemas and inferred types for the MVP contracts, including deferred `VerificationResult` and `EvalCase` |
 | `tests/contract` | Schema, migration, health, checkout persistence, order lookup, config, and log checks |
@@ -96,4 +96,12 @@ QA-02 does not implement `GHOST_SUCCESS` or a scenario-selected `VERIFICATION_UN
 
 ## Explicitly absent
 
-Ghost success, scenario-selected verification outages, harness reset, the evidence collector, the runtime agent, the independent validator, the quality gate, Playwright, the golden dataset, authentication, payments, and deployment. The storefront still has no catalog, cart, or checkout UI.
+Ghost success, scenario-selected verification outages, harness reset, the evidence collector, the runtime agent, the independent validator, the quality gate, Playwright, the golden dataset, authentication, payments, and deployment.
+
+## Storefront shell (QA-03)
+
+`apps/storefront` renders an accessible shell: skip link, header, section navigation, main, and a status region. The four sections are Catalog, Cart, Checkout, and Confirmation. Each one states that the commerce screen is not available. The shell does not call `GET /api/products` or `POST /api/checkout`, does not render prices, and does not show `Order confirmed`. An unknown section id resolves to copy that says no order was placed.
+
+Changing sections is local button state. There is no router package and no fault-mode control. A sentence in the page says a message on the screen is not proof that an order was saved. Product cards, the cart, the checkout form, and a real confirmation remain QA-04. The API can be down and this shell still renders, because it does not depend on the API.
+
+The copy lives in `apps/storefront/src/shell-model.ts`. `tests/contract/storefront-shell.test.ts` locks the four section ids, `placesOrder: false`, and the unknown-section result. That test does not open a browser.

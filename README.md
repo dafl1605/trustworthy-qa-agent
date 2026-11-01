@@ -9,7 +9,9 @@ The package provides: AI-Native SDLC intent/spec, repository guardrails, four do
 
 After **QA-01**, the repo includes a pnpm monorepo scaffold (`apps/storefront`, `apps/api`, `packages/shared`).
 
-After **QA-02**, the API serves `GET /api/products`, `POST /api/checkout`, and `GET /api/orders/:orderId`. A normal checkout is persisted in SQLite before the confirmation response. The storefront is still a placeholder. Fault injection is not mounted.
+After **QA-02**, the API serves `GET /api/products`, `POST /api/checkout`, and `GET /api/orders/:orderId`. A normal checkout is persisted in SQLite before the confirmation response. Fault injection is not mounted.
+
+After **QA-03**, the storefront is an accessible shell with Catalog, Cart, Checkout, and Confirmation sections. Those sections do not list products, keep a cart, or submit an order. The checkout screen remains QA-04. A draft meetup abstract, agenda, and bio checklist lives in [`docs/speaker/2026-11-25-browserstack-draft.md`](docs/speaker/2026-11-25-browserstack-draft.md). It has not been sent.
 
 ## Requirements
 

@@ -63,6 +63,14 @@ Cada día agregar a `docs/progress/DATE.md`:
 - Horas gastadas por EP y reserva acumulada; progreso hacia siguiente gate.
 - Siguiente tarea con dependencias y acceptance criteria.
 
+## Probes del orquestador de desarrollo
+
+No son una tarea nueva y no cambian las 54 h + 9 h. Siguen en UNVERIFIED. El procedimiento está en `docs/orchestrator-eval-probes.md`. QA-03 no las ejecuta. O-001 a O-007 se verifican durante la implementación de QA-15, en una sesión limpia, y se anota PASS, FAIL o UNVERIFIED con modelo, prompt y versión del skill. La fecha de QA-15 en el calendario de este archivo es W3-D3 VIE 13. El comentario https://github.com/dafl1605/trustworthy-qa-agent/pull/5#issuecomment-6560806263 acepta dejar O-001 a O-007 en UNVERIFIED hasta QA-15 y cierra F-01 como riesgo aceptado. Ese comentario no anota PASS ni FAIL.
+
+Para que esa sesión pueda observar el comportamiento, ya tienen que existir QA-05, QA-06, QA-07, QA-11, QA-12 y QA-14, incluida la confusión 404/503 de QA-R2. No abrir la sesión de probes en esas tareas anteriores.
+
+`pnpm test` no puntúa estas probes. Anotar una no anota las demás.
+
 ## Enforcement
 - No abrir PR si no pasan checks del alcance de la tarea.
 - No merged changes con nuevas librerías sin justificación de mantenimiento/bundle.
