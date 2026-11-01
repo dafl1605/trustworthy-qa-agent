@@ -8,7 +8,6 @@ export interface ShellView {
   heading: string;
   body: string;
   status: string;
-  ready: false;
   placesOrder: false;
 }
 
@@ -17,36 +16,32 @@ export const SHELL_VIEWS: readonly ShellView[] = [
     id: 'catalog',
     label: 'Catalog',
     heading: 'Catalog',
-    body: 'Product cards are not on this screen yet. This scaffold only reserves the catalog section.',
-    status: 'Catalog section. Product cards are not available.',
-    ready: false,
+    body: 'Three demo products. Prices come from the local catalog in integer cents.',
+    status: 'Catalog section. Prices are loaded from the local API.',
     placesOrder: false,
   },
   {
     id: 'cart',
     label: 'Cart',
     heading: 'Cart',
-    body: 'The cart is empty. Adding items is not part of this scaffold.',
-    status: 'Cart section. The cart is empty and checkout is not available.',
-    ready: false,
+    body: 'Up to 3 different products. Quantity per product is 1 to 99.',
+    status: 'Cart section. The cart starts empty.',
     placesOrder: false,
   },
   {
     id: 'checkout',
     label: 'Checkout',
     heading: 'Checkout',
-    body: 'The checkout form is not on this screen yet. Nothing is submitted from this scaffold.',
-    status: 'Checkout section. The checkout form is not available.',
-    ready: false,
+    body: 'Checkout submits the cart. The server calculates the total.',
+    status: 'Checkout section. The form does not ask for a name or payment.',
     placesOrder: false,
   },
   {
     id: 'confirmation',
     label: 'Confirmation',
     heading: 'Confirmation',
-    body: 'There is no confirmation to show. No order was placed from this scaffold.',
-    status: 'Confirmation section. No order was placed.',
-    ready: false,
+    body: 'Shown only after checkout returns a message. That message is not proof the order was saved.',
+    status: 'Confirmation section. A returned message is not proof the order was saved.',
     placesOrder: false,
   },
 ];
@@ -56,7 +51,6 @@ export const UNKNOWN_SECTION = {
   heading: 'Unknown section',
   body: 'This scaffold has no content for that section and did not place an order.',
   status: 'Unknown section. No order was placed.',
-  ready: false,
   placesOrder: false,
 } as const;
 
@@ -67,7 +61,6 @@ export interface ResolvedShellSection {
   heading: string;
   body: string;
   status: string;
-  ready: false;
   placesOrder: false;
 }
 

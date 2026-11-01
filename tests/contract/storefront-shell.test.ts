@@ -18,7 +18,6 @@ describe('storefront shell', () => {
     for (const view of SHELL_VIEWS) {
       const resolved = resolveShellView(view.id);
       assert.equal(resolved.known, true);
-      assert.equal(resolved.ready, false);
       assert.equal(resolved.placesOrder, false);
       assert.equal(resolved.label, view.label);
       assert.doesNotMatch(`${resolved.heading} ${resolved.body} ${resolved.status}`, FORBIDDEN);
@@ -30,7 +29,6 @@ describe('storefront shell', () => {
     assert.equal(resolved.known, false);
     assert.equal(resolved.id, 'unknown');
     assert.equal(resolved.heading, UNKNOWN_SECTION.heading);
-    assert.equal(resolved.ready, false);
     assert.equal(resolved.placesOrder, false);
     assert.match(resolved.status, /No order was placed/);
     assert.doesNotMatch(`${resolved.heading} ${resolved.body} ${resolved.status}`, FORBIDDEN);
