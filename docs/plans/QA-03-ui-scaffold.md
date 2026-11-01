@@ -28,6 +28,7 @@ Replace the QA-01 placeholder with an accessible storefront shell, and draft the
   - `docs/orchestrator-eval-probes.md` (QA-15 verification session; probes stay UNVERIFIED)
 - Explicitly not change: API routes, SQLite, shared Zod contracts, fault modes, sprint-plan hours, skills, gate policy
 - Approved exception, D-01 option B, PR comment https://github.com/dafl1605/trustworthy-qa-agent/pull/5#issuecomment-6549488511 (2026-10-31T21:40:35Z): the three checklist files above stay in this PR. Product scope and the 54h + 9h baseline stay unchanged. `docs/orchestrator-eval-probes.md` remains "Proposed checks, NOT executed". O-001 through O-007 are verified during QA-15 implementation, as recorded in that file and in `docs/sprint-plan.md`. This task does not run them.
+- Accepted risk, D-02 option A, PR comment https://github.com/dafl1605/trustworthy-qa-agent/pull/5#issuecomment-6560806263 (2026-11-01T16:39:36Z): O-001 through O-007 stay UNVERIFIED until the QA-15 clean session. F-01 is closed as that accepted risk. This acceptance does not score the probes and does not change hours.
 - Probe-schedule follow-up, PR comment https://github.com/dafl1605/trustworthy-qa-agent/pull/5#issuecomment-6552415277: the owner asked to record that calendar in `docs/orchestrator-eval-probes.md`, `docs/sprint-plan.md`, and `docs/progress/2026-10-31.md`. `docs/ai-native-sdlc-adaptation.md` carries the same note from that follow-up (commits `0b28c43` and `45d1685`). No hour change. D-01 option B does not by itself list these three files.
 
 ## Dependencies and design alternatives
@@ -41,7 +42,7 @@ Replace the QA-01 placeholder with an accessible storefront shell, and draft the
 ## Risk review
 - What can break? The storefront production build and the contract typecheck, if the new `.ts` import is rejected.
 - Risk to fault semantics / gate / permissions? None. The shell cannot select a scenario and cannot write an order.
-- Required human approval? Sending the speaker draft, supplying a real name and role, and supplying a headshot outside the repo. D-01 option B, keeping the checklist instruction in this PR, was approved in PR comment 6549488511. Orchestrator probes O-001 through O-007 were not executed for that configuration edit. They stay UNVERIFIED and are verified during QA-15 implementation, after QA-05, QA-06, QA-07, QA-11, QA-12, and QA-14 are in the tree.
+- Required human approval? Sending the speaker draft, supplying a real name and role, and supplying a headshot outside the repo. D-01 option B, keeping the checklist instruction in this PR, was approved in PR comment 6549488511. Orchestrator probes O-001 through O-007 were not executed for that configuration edit. They stay UNVERIFIED and are verified during QA-15 implementation, after QA-05, QA-06, QA-07, QA-11, QA-12, and QA-14 are in the tree. D-02 option A, PR comment 6560806263, accepts leaving those probes UNVERIFIED until QA-15 and closes F-01 as an accepted risk. That comment does not score them.
 
 ## Tests before implementation
 - Positive: four sections resolve as known, with their own headings, and `placesOrder` stays false.
@@ -73,4 +74,4 @@ Replace the QA-01 placeholder with an accessible storefront shell, and draft the
 - Commands run and result: recorded in `docs/progress/2026-10-31.md` under QA-03. `pnpm typecheck` and `pnpm test` exited 0 after the final focus change. `node:test` reported 34 passed and 0 failed.
 - Artifact paths: local run screenshots and the browser recording are outside the repo, under `/opt/cursor/artifacts/`.
 - Actual elapsed hours: unknown
-- Status: IN_REVIEW. Not DONE. An independent reviewer still has to read the PR head SHA. D-01 option B is recorded above. The probe file was not re-run. Verification of O-001 through O-007 is recorded for QA-15 implementation in `docs/orchestrator-eval-probes.md`, `docs/sprint-plan.md`, and `docs/progress/2026-10-31.md`.
+- Status: IN_REVIEW. Not DONE. An independent reviewer still has to read the PR head SHA. D-01 option B is recorded above. D-02 option A is recorded above: F-01 is an accepted risk and the probes stay UNVERIFIED until QA-15. The probe file was not re-run. Verification of O-001 through O-007 is recorded for QA-15 implementation in `docs/orchestrator-eval-probes.md`, `docs/sprint-plan.md`, and `docs/progress/2026-10-31.md`.

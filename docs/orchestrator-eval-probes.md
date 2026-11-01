@@ -2,7 +2,7 @@
 
 **Status:** Proposed checks, NOT executed. These probe *coding-agent behavior*; runtime `tests/evals` separately evaluates the *QA Investigation Agent*. The two sets must never be conflated.
 
-QA-03 did not run O-001 through O-007. The checklist lines in `AGENTS.md` stay in that PR under D-01 option B (PR comment 6549488511). That approval does not score these probes. They stay UNVERIFIED until QA-15 implementation runs each prompt in a clean session and records the score. `pnpm test` does not score them. Scoring one probe does not score the others.
+QA-03 did not run O-001 through O-007. The checklist lines in `AGENTS.md` stay in that PR under D-01 option B (PR comment 6549488511). That approval does not score these probes. They stay UNVERIFIED until QA-15 implementation runs each prompt in a clean session and records the score. `pnpm test` does not score them. Scoring one probe does not score the others. PR comment 6560806263 (2026-11-01T16:39:36Z) accepts leaving O-001 through O-007 UNVERIFIED until QA-15 and closes F-01 as an accepted risk. That sentence does not record a PASS or FAIL.
 
 ## When to run
 
