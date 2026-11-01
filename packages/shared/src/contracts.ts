@@ -209,19 +209,19 @@ export const PRODUCT_FIXTURES: readonly Product[] = [
   {
     sku: 'SKU-MUG',
     name: 'Ceramic Mug',
-    description: 'Demo mug. No real storefront catalog yet.',
+    description: 'Demo mug. The catalog price is 1299 cents.',
     priceCents: 1299,
   },
   {
     sku: 'SKU-TEE',
     name: 'Cotton T-Shirt',
-    description: 'Demo shirt. Price is integer cents.',
+    description: 'Demo shirt. The catalog price is 2499 cents.',
     priceCents: 2499,
   },
   {
     sku: 'SKU-STK',
     name: 'Sticker Pack',
-    description: 'Demo stickers. Three fixtures total.',
+    description: 'Demo stickers. The catalog price is 399 cents.',
     priceCents: 399,
   },
 ];

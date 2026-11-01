@@ -1,4 +1,4 @@
-# Architecture — QA-01 scaffold, QA-02 checkout API, QA-03 storefront shell
+# Architecture — QA-01 scaffold, QA-02 checkout API, QA-03 storefront shell, QA-04 commerce UI
 
 This note is the as-built skeleton. Observable product behavior still lives in `docs/spec.md`. Domain names live in `docs/architecture-contracts.md`. Foundation choices live in `docs/adr/0001-runtime-foundations.md`.
 
@@ -8,7 +8,7 @@ Requires Node.js `>=22.13.0` (this VM: `22.23.4`) and pnpm `10.33.4`. `runId` an
 
 | Path | Role |
 |---|---|
-| `apps/storefront` | React + Vite shell. Four named sections (catalog, cart, checkout, confirmation). None of them fetch products, keep a cart, or submit checkout |
+| `apps/storefront` | React + Vite catalog, cart, checkout, and confirmation. The page calls `GET /api/products` and `POST /api/checkout` through the Vite `/api` proxy. It does not call `GET /api/orders/:orderId` |
 | `apps/api` | Loopback Node.js server. `GET /health`, fixture catalog, normal checkout persistence, and order lookup. Schema apply lives on `@tqa/api/migrate` and the CLI, not the public package root |
 | `packages/shared` | Zod schemas and inferred types for the MVP contracts, including deferred `VerificationResult` and `EvalCase` |
 | `tests/contract` | Schema, migration, health, checkout persistence, order lookup, config, and log checks |
@@ -96,12 +96,16 @@ QA-02 does not implement `GHOST_SUCCESS` or a scenario-selected `VERIFICATION_UN
 
 ## Explicitly absent
 
-Ghost success, scenario-selected verification outages, harness reset, the evidence collector, the runtime agent, the independent validator, the quality gate, Playwright, the golden dataset, authentication, payments, and deployment.
+Ghost success, scenario-selected verification outages, harness reset, the evidence collector, the runtime agent, the independent validator, the quality gate, Playwright, the golden dataset, authentication, payments, and deployment. The storefront checkout screen is present. It does not implement those fault modes and it does not look up the order it displays.
 
-## Storefront shell (QA-03)
+## Storefront shell (QA-03) and commerce UI (QA-04)
 
-`apps/storefront` renders an accessible shell: skip link, header, section navigation, main, and a status region. The four sections are Catalog, Cart, Checkout, and Confirmation. Each one states that the commerce screen is not available. The shell does not call `GET /api/products` or `POST /api/checkout`, does not render prices, and does not show `Order confirmed`. An unknown section id resolves to copy that says no order was placed.
+`apps/storefront` renders an accessible shell: skip link, header, section navigation, main, and a status region. The four sections are Catalog, Cart, Checkout, and Confirmation. Changing sections is local button state. There is no router package and no fault-mode control. A sentence in the page says a message on the screen is not proof that an order was saved.
 
-Changing sections is local button state. There is no router package and no fault-mode control. A sentence in the page says a message on the screen is not proof that an order was saved. Product cards, the cart, the checkout form, and a real confirmation remain QA-04. The API can be down and this shell still renders, because it does not depend on the API.
+QA-04 fills those sections. On load the page requests `GET /api/products` and renders the returned name, description, and integer-cent price. The cart stores at most 3 distinct SKUs, each with quantity 1–99. Checkout posts `{ runId, items: [{ sku, quantity }] }` to `POST /api/checkout`. The correlation id is a UUID generated in the browser. The form has no name, address, or payment fields. The catalog estimate is display-only. The confirmation renders `message`, `orderId`, `runId`, and `totalCents` from the response, then says that message is not proof the order was saved. `persistenceChecked` on that view is always false.
 
-The copy lives in `apps/storefront/src/shell-model.ts`. `tests/contract/storefront-shell.test.ts` locks the four section ids, `placesOrder: false`, and the unknown-section result. That test does not open a browser.
+The storefront does not call `GET /api/orders/:orderId`. A later `GHOST_SUCCESS` response can reuse the same confirmation shape; this page will show it and still will not decide whether the order exists. A failed catalog load or a failed checkout leaves the confirmation empty. Copy for a checkout 503 says the failure is not proof that an order is missing. The API can be down and the shell still renders the error state.
+
+Dev and preview proxy `/api` to `http://127.0.0.1:3001`. The API process still binds loopback only. No CORS header was added.
+
+Section labels live in `apps/storefront/src/shell-model.ts`. Cart and checkout transitions live in `apps/storefront/src/commerce-model.ts`. HTTP lives in `apps/storefront/src/api-client.ts`. `tests/contract/storefront-shell.test.ts` and `tests/contract/storefront-commerce.test.ts` lock this behavior without a browser. The static shell copy still has `placesOrder: false` because the copy itself does not submit an order. An unknown section id still says no order was placed.
