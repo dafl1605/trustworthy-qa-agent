@@ -24,7 +24,7 @@ Replace the QA-01 placeholder with an accessible storefront shell, and draft the
   - `docs/platforms/cursor/START_CURSOR.md` (same checklist line)
   - `docs/templates/task-completion-checklist.md`
 - Explicitly not change: API routes, SQLite, shared Zod contracts, fault modes, sprint-plan hours, skills, gate policy
-- Approved exception, D-01 option B, PR comment https://github.com/dafl1605/trustworthy-qa-agent/pull/5#issuecomment-6549488511 (2026-10-31T21:40:35Z): the three checklist files above stay in this PR. Product scope and the 54h + 9h baseline stay unchanged. `docs/orchestrator-eval-probes.md` remains "Proposed checks, NOT executed". O-001 through O-007 are scheduled on later tasks in that file and in `docs/sprint-plan.md`. This task does not run them.
+- Approved exception, D-01 option B, PR comment https://github.com/dafl1605/trustworthy-qa-agent/pull/5#issuecomment-6549488511 (2026-10-31T21:40:35Z): the three checklist files above stay in this PR. Product scope and the 54h + 9h baseline stay unchanged. `docs/orchestrator-eval-probes.md` remains "Proposed checks, NOT executed". O-001 through O-007 are verified during QA-15 implementation, as recorded in that file and in `docs/sprint-plan.md`. This task does not run them.
 
 ## Dependencies and design alternatives
 - Prerequisites: QA-01 storefront scaffold and QA-02 API are on `main` at `06afb86d019299d903a069432d60131ecba9042d`. No open PR covers QA-03.
@@ -37,7 +37,7 @@ Replace the QA-01 placeholder with an accessible storefront shell, and draft the
 ## Risk review
 - What can break? The storefront production build and the contract typecheck, if the new `.ts` import is rejected.
 - Risk to fault semantics / gate / permissions? None. The shell cannot select a scenario and cannot write an order.
-- Required human approval? Sending the speaker draft, supplying a real name and role, and supplying a headshot outside the repo. D-01 option B, keeping the checklist instruction in this PR, was approved in PR comment 6549488511. Orchestrator probes O-001 through O-007 were not executed for that configuration edit. They stay UNVERIFIED and are scheduled later: O-001 and O-004 on QA-06, O-003 on QA-07, O-002 on QA-12 with QA-R2, and O-005 through O-007 on QA-14 and QA-15.
+- Required human approval? Sending the speaker draft, supplying a real name and role, and supplying a headshot outside the repo. D-01 option B, keeping the checklist instruction in this PR, was approved in PR comment 6549488511. Orchestrator probes O-001 through O-007 were not executed for that configuration edit. They stay UNVERIFIED and are verified during QA-15 implementation, after QA-05, QA-06, QA-07, QA-11, QA-12, and QA-14 are in the tree.
 
 ## Tests before implementation
 - Positive: four sections resolve as known, with their own headings, and `placesOrder` stays false.
@@ -69,4 +69,4 @@ Replace the QA-01 placeholder with an accessible storefront shell, and draft the
 - Commands run and result: recorded in `docs/progress/2026-10-31.md` under QA-03. `pnpm typecheck` and `pnpm test` exited 0 after the final focus change. `node:test` reported 34 passed and 0 failed.
 - Artifact paths: local run screenshots and the browser recording are outside the repo, under `/opt/cursor/artifacts/`.
 - Actual elapsed hours: unknown
-- Status: IN_REVIEW. Not DONE. An independent reviewer still has to read the PR head SHA. D-01 option B is recorded above. The probe file was not re-run. The later-task schedule is recorded in `docs/orchestrator-eval-probes.md`, `docs/sprint-plan.md`, and `docs/progress/2026-10-31.md`.
+- Status: IN_REVIEW. Not DONE. An independent reviewer still has to read the PR head SHA. D-01 option B is recorded above. The probe file was not re-run. Verification of O-001 through O-007 is recorded for QA-15 implementation in `docs/orchestrator-eval-probes.md`, `docs/sprint-plan.md`, and `docs/progress/2026-10-31.md`.

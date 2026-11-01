@@ -2,23 +2,25 @@
 
 **Status:** Proposed checks, NOT executed. These probe *coding-agent behavior*; runtime `tests/evals` separately evaluates the *QA Investigation Agent*. The two sets must never be conflated.
 
-QA-03 did not run O-001 through O-007. The checklist lines in `AGENTS.md` stay in that PR under D-01 option B (PR comment 6549488511). That approval does not score these probes. They stay UNVERIFIED until the scheduled task below runs each prompt in a clean session and records the score. `pnpm test` does not score them. Scoring one probe does not score the others.
+QA-03 did not run O-001 through O-007. The checklist lines in `AGENTS.md` stay in that PR under D-01 option B (PR comment 6549488511). That approval does not score these probes. They stay UNVERIFIED until QA-15 implementation runs each prompt in a clean session and records the score. `pnpm test` does not score them. Scoring one probe does not score the others.
 
 ## When to run
 
-No new task and no change to the 54h + 9h baseline. `docs/ai-native-sdlc-adaptation.md` places these checks inside tasks that already exist. Run the probe in that task's session, after the behavior it names is actually in the tree. Record PASS, FAIL, or UNVERIFIED with the model, prompt, and skill version. Do not add CI.
+Verification of O-001 through O-007 happens during QA-15 implementation. No new task and no change to the 54h + 9h baseline. Record PASS, FAIL, or UNVERIFIED with the model, prompt, and skill version. Do not add CI.
 
-| Probe | Scheduled task | Why this task |
+QA-15 can score a probe only after the behavior it names is already in the tree. Do not open the probe session from QA-03, QA-04, QA-06, QA-07, QA-12, or QA-14.
+
+| Probe | Verified during | Behavior that must already exist |
 |---|---|---|
-| O-001 | QA-06, after QA-05 | `GHOST_SUCCESS` and the superficial UI PASS exist only once those tasks land |
-| O-002 | QA-12, with the 404/503 confusion already planned in QA-R2 | `UNKNOWN` / `HOLD` arrive with the validator and the gate |
-| O-003 | QA-07 | The prompt is that task |
-| O-004 | QA-06 | The prompt is that task |
-| O-005 | QA-15, after QA-12 | Evidence logs and a gate that could approve a release |
-| O-006 | QA-15, after QA-11 and QA-12 | The independent validator and the gate exist |
-| O-007 | QA-14 and QA-15 | The eval runner does not exist until QA-14. `tests/evals/` stays empty until then |
+| O-001 | QA-15 | QA-05 `GHOST_SUCCESS` and the QA-06 superficial UI PASS |
+| O-002 | QA-15 | QA-12 `UNKNOWN` / `HOLD`, including the QA-R2 404/503 confusion |
+| O-003 | QA-15 | QA-07 is the task named in the prompt |
+| O-004 | QA-15 | QA-06 is the task named in the prompt |
+| O-005 | QA-15 | QA-12 gate, so a log line could otherwise approve a release |
+| O-006 | QA-15 | QA-11 validator and QA-12 gate |
+| O-007 | QA-15 | QA-14 eval runner. `tests/evals/` stays empty until then |
 
-Reference calendar dates live in `docs/sprint-plan.md`. Shift them with actual progress. QA-04 remains the next unblocked task after QA-03. Do not start a probe session from the QA-03 PR.
+Reference calendar dates live in `docs/sprint-plan.md`. Shift them with actual progress. QA-04 remains the next unblocked task after QA-03.
 
 ## How to run
 For each probe: run the stated prompt in a clean session (or deterministic simulator where feasible) with only AGENTS.md and the matching skill loaded. Check observable decisions, proposed file edits and actual commands; score PASS/FAIL/UNVERIFIED and record model/prompt/skill version. Do not equate model self-reports with independent evidence.
