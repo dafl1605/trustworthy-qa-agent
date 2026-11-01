@@ -113,6 +113,13 @@ function QuantityField(props: {
         onBlur={(event) => {
           commit(event.target.value);
         }}
+        onKeyDown={(event) => {
+          if (event.key !== 'Enter') {
+            return;
+          }
+          event.preventDefault();
+          commit(event.currentTarget.value);
+        }}
       />
     </>
   );
@@ -284,10 +291,10 @@ export function App() {
           return showConfirmation(current, result.confirmation, crypto.randomUUID());
         }
         if (result.reason === 'rejected' || result.reason === 'network' || result.reason === 'invalid') {
-          return checkoutFailed(current, result.reason);
+          return checkoutFailed(current, result.reason, crypto.randomUUID());
         }
         if (result.reason === 'unavailable') {
-          return checkoutFailed(current, 'unavailable');
+          return checkoutFailed(current, 'unavailable', crypto.randomUUID());
         }
         return current;
       });

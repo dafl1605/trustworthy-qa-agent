@@ -364,6 +364,7 @@ export function beginCheckout(state: CommerceState): CommerceState {
   return {
     ...state,
     checkoutPhase: 'submitting',
+    confirmation: null,
     notice: { tone: 'neutral', text: COMMERCE_NOTICE.placing },
   };
 }
@@ -387,7 +388,7 @@ export function showConfirmation(
     !Number.isSafeInteger(confirmation.totalCents) ||
     confirmation.totalCents < 0
   ) {
-    return checkoutFailed(state, 'invalid');
+    return checkoutFailed(state, 'invalid', nextRunId);
   }
   return {
     ...state,
@@ -406,10 +407,16 @@ export function showConfirmation(
   };
 }
 
-export function checkoutFailed(state: CommerceState, reason: CheckoutFailureReason): CommerceState {
+export function checkoutFailed(
+  state: CommerceState,
+  reason: CheckoutFailureReason,
+  nextRunId: string,
+): CommerceState {
   return {
     ...state,
     checkoutPhase: 'failed',
+    confirmation: null,
+    runId: nextRunId,
     notice: { tone: 'error', text: FAILURE_NOTICE[reason] },
   };
 }

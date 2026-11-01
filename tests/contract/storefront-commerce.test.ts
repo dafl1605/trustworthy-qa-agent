@@ -13,6 +13,7 @@ import {
   COMMERCE_NOTICE,
   COMMERCE_VIEW_IDS,
   addProduct,
+  beginCheckout,
   catalogFailed,
   catalogReady,
   checkoutFailed,
@@ -28,6 +29,7 @@ import { SHELL_VIEW_IDS } from '../../apps/storefront/src/shell-model.ts';
 
 const runId = '11111111-1111-4111-8111-111111111111';
 const nextRunId = '22222222-2222-4222-8222-222222222222';
+const retryRunId = '33333333-3333-4333-8333-333333333333';
 const orderId = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa';
 
 const mug: CatalogProduct = {
@@ -145,10 +147,38 @@ describe('storefront commerce model', () => {
     const mismatched = showConfirmation(
       ready([mug]),
       { orderId, runId: nextRunId, message: 'Order confirmed', totalCents: 1299 },
-      runId,
+      retryRunId,
     );
     assert.equal(mismatched.confirmation, null);
+    assert.equal(mismatched.runId, retryRunId);
     assert.equal(mismatched.notice.text, COMMERCE_NOTICE.invalid);
+  });
+
+  it('retires the runId after a failed attempt and clears a previous confirmation', () => {
+    let state = addProduct(ready([mug]), mug.sku);
+    state = showConfirmation(
+      state,
+      { orderId, runId, message: 'Order confirmed', totalCents: 1299 },
+      nextRunId,
+    );
+    state = addProduct(state, mug.sku);
+    const started = beginCheckout(state);
+    assert.equal(started.checkoutPhase, 'submitting');
+    assert.equal(started.confirmation, null);
+    assert.equal(started.runId, nextRunId);
+
+    const failed = checkoutFailed(started, 'network', retryRunId);
+    assert.equal(failed.confirmation, null);
+    assert.equal(failed.runId, retryRunId);
+    assert.notEqual(failed.runId, nextRunId);
+    assert.match(failed.notice.text, /No confirmation was returned/);
+    const retry = draftCheckout(failed);
+    assert.equal(retry.ok, true);
+    if (!retry.ok) {
+      return;
+    }
+    assert.equal(retry.payload.runId, retryRunId);
+    assert.notEqual(retry.payload.runId, nextRunId);
   });
 
   it('keeps a failed catalog or checkout from inventing an order id', () => {
@@ -161,7 +191,9 @@ describe('storefront commerce model', () => {
     assert.match(failedCatalog.notice.text, /^Error:/);
     assert.doesNotMatch(failedCatalog.notice.text, /Order confirmed/);
 
-    const failedCheckout = checkoutFailed(loaded, 'unavailable');
+    const failedCheckout = checkoutFailed(loaded, 'unavailable', nextRunId);
+    assert.equal(failedCheckout.runId, nextRunId);
+    assert.notEqual(failedCheckout.runId, loaded.runId);
     assert.equal(failedCheckout.confirmation, null);
     assert.equal(failedCheckout.lines.length, 1);
     assert.match(failedCheckout.notice.text, /not proof that an order is missing/);
@@ -187,6 +219,9 @@ describe('storefront API client', () => {
     assert.equal(source.includes('Order confirmed'), false);
     assert.match(source, /\/api\/products/);
     assert.match(source, /\/api\/checkout/);
+    assert.match(source, /checkoutFailed\(current, result\.reason, crypto\.randomUUID\(\)\)/);
+    assert.match(source, /checkoutFailed\(current, 'unavailable', crypto\.randomUUID\(\)\)/);
+    assert.match(source, /if \(event\.key !== 'Enter'\)/);
   });
 
   it('rejects a catalog payload that is not the fixture shape', () => {
