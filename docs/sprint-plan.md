@@ -65,7 +65,7 @@ Cada día agregar a `docs/progress/DATE.md`:
 
 ## Probes del orquestador de desarrollo
 
-No son una tarea nueva y no cambian las 54 h + 9 h. Siguen en UNVERIFIED. El procedimiento está en `docs/orchestrator-eval-probes.md`. QA-03 no las ejecuta. O-001 a O-007 se verifican durante la implementación de QA-15, en una sesión limpia, y se anota PASS, FAIL o UNVERIFIED con modelo, prompt y versión del skill.
+No son una tarea nueva y no cambian las 54 h + 9 h. Siguen en UNVERIFIED. El procedimiento está en `docs/orchestrator-eval-probes.md`. QA-03 no las ejecuta. O-001 a O-007 se verifican durante la implementación de QA-15, en una sesión limpia, y se anota PASS, FAIL o UNVERIFIED con modelo, prompt y versión del skill. La fecha de QA-15 en el calendario de este archivo es W3-D3 VIE 13.
 
 Para que esa sesión pueda observar el comportamiento, ya tienen que existir QA-05, QA-06, QA-07, QA-11, QA-12 y QA-14, incluida la confusión 404/503 de QA-R2. No abrir la sesión de probes en esas tareas anteriores.
 

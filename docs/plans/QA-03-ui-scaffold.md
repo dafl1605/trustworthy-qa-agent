@@ -23,8 +23,12 @@ Replace the QA-01 placeholder with an accessible storefront shell, and draft the
   - `AGENTS.md` (checklist delivery line only)
   - `docs/platforms/cursor/START_CURSOR.md` (same checklist line)
   - `docs/templates/task-completion-checklist.md`
+  - `docs/sprint-plan.md` (probe schedule only; hours unchanged)
+  - `docs/ai-native-sdlc-adaptation.md` (same QA-15 schedule note)
+  - `docs/orchestrator-eval-probes.md` (QA-15 verification session; probes stay UNVERIFIED)
 - Explicitly not change: API routes, SQLite, shared Zod contracts, fault modes, sprint-plan hours, skills, gate policy
 - Approved exception, D-01 option B, PR comment https://github.com/dafl1605/trustworthy-qa-agent/pull/5#issuecomment-6549488511 (2026-10-31T21:40:35Z): the three checklist files above stay in this PR. Product scope and the 54h + 9h baseline stay unchanged. `docs/orchestrator-eval-probes.md` remains "Proposed checks, NOT executed". O-001 through O-007 are verified during QA-15 implementation, as recorded in that file and in `docs/sprint-plan.md`. This task does not run them.
+- Probe-schedule follow-up, PR comment https://github.com/dafl1605/trustworthy-qa-agent/pull/5#issuecomment-6552415277: the owner asked to record that calendar in `docs/orchestrator-eval-probes.md`, `docs/sprint-plan.md`, and `docs/progress/2026-10-31.md`. `docs/ai-native-sdlc-adaptation.md` carries the same note from that follow-up (commits `0b28c43` and `45d1685`). No hour change. D-01 option B does not by itself list these three files.
 
 ## Dependencies and design alternatives
 - Prerequisites: QA-01 storefront scaffold and QA-02 API are on `main` at `06afb86d019299d903a069432d60131ecba9042d`. No open PR covers QA-03.
