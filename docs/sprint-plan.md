@@ -63,6 +63,17 @@ Cada día agregar a `docs/progress/DATE.md`:
 - Horas gastadas por EP y reserva acumulada; progreso hacia siguiente gate.
 - Siguiente tarea con dependencias y acceptance criteria.
 
+## Probes del orquestador de desarrollo
+
+No son una tarea nueva y no cambian las 54 h + 9 h. Siguen en UNVERIFIED. El procedimiento está en `docs/orchestrator-eval-probes.md`. QA-03 no las ejecuta. Al llegar a la tarea indicada, correr esa probe en una sesión limpia, dentro de las horas de la tarea, y anotar PASS, FAIL o UNVERIFIED con modelo, prompt y versión del skill:
+
+- QA-06, después de QA-05: O-001 y O-004.
+- QA-07: O-003.
+- QA-12, junto con la confusión 404/503 ya prevista en QA-R2: O-002.
+- QA-14 y QA-15: O-005, O-006 y O-007. O-005 y O-006 esperan al gate de QA-12. O-007 espera al runner de QA-14.
+
+`pnpm test` no puntúa estas probes. Anotar una no anota las demás.
+
 ## Enforcement
 - No abrir PR si no pasan checks del alcance de la tarea.
 - No merged changes con nuevas librerías sin justificación de mantenimiento/bundle.
