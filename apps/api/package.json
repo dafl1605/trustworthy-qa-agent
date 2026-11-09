@@ -11,6 +11,10 @@
     "./migrate": {
       "types": "./dist/db/migrate.d.ts",
       "import": "./dist/db/migrate.js"
+    },
+    "./verify": {
+      "types": "./dist/orders/verify-order.d.ts",
+      "import": "./dist/orders/verify-order.js"
     }
   },
   "scripts": {

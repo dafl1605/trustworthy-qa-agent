@@ -1,4 +1,4 @@
-# Architecture — QA-01 scaffold, QA-02 checkout API, QA-03 storefront shell, QA-04 commerce UI
+# Architecture — QA-01 scaffold, QA-02 checkout API, QA-03 storefront shell, QA-04 commerce UI, QA-05 fault harness
 
 This note is the as-built skeleton. Observable product behavior still lives in `docs/spec.md`. Domain names live in `docs/architecture-contracts.md`. Foundation choices live in `docs/adr/0001-runtime-foundations.md`.
 
@@ -9,7 +9,7 @@ Requires Node.js `>=22.13.0` (this VM: `22.23.4`) and pnpm `10.33.4`. `runId` an
 | Path | Role |
 |---|---|
 | `apps/storefront` | React + Vite catalog, cart, checkout, and confirmation. The page calls `GET /api/products` and `POST /api/checkout` through the Vite `/api` proxy. It does not call `GET /api/orders/:orderId` |
-| `apps/api` | Loopback Node.js server. `GET /health`, fixture catalog, normal checkout persistence, and order lookup. Schema apply lives on `@tqa/api/migrate` and the CLI, not the public package root |
+| `apps/api` | Loopback Node.js server. `GET /health`, fixture catalog, checkout, order lookup, and the local fault harness. Schema apply lives on `@tqa/api/migrate`. The independent order read lives on `@tqa/api/verify`. Neither is exported from the package root |
 | `packages/shared` | Zod schemas and inferred types for the MVP contracts, including deferred `VerificationResult` and `EvalCase` |
 | `tests/contract` | Schema, migration, health, checkout persistence, order lookup, config, and log checks |
 | `tests/e2e` | Reserved for Playwright (QA-06). Empty |
@@ -44,10 +44,10 @@ QA-02 mounts the baseline business routes. `createApp({ database })` prepares an
 | Route | Success | Failure |
 |---|---|---|
 | `GET /api/products` | 200 `{ products }` from `PRODUCT_FIXTURES`. Prices are integer cents. There is no products table | Other methods: 405 |
-| `POST /api/checkout` | 200 `CheckoutConfirmation` only after `orders` and `order_items` commit. `totalCents` is `quantity * catalog price`. Extra client money fields are ignored. The message `Order confirmed` is the superficial confirmation and is not itself proof of persistence | 400 invalid body or unknown SKU. 500 `{ error: "internal_error" }` when a `SqliteError` is thrown, including a failed item insert or a dropped table. 503 `{ error: "persistence_unavailable" }` when no database was configured or the connection is not open. No `orderId` is returned unless the transaction committed |
+| `POST /api/checkout` | 200 `CheckoutConfirmation`. `totalCents` is `quantity * catalog price`. Extra client money fields are ignored. The message `Order confirmed` is the superficial confirmation and is not itself proof of persistence. With the harness off, or with the run in `NORMAL`, that response is sent only after `orders` and `order_items` commit | 400 invalid body or unknown SKU. 500 `{ error: "internal_error" }` when a `SqliteError` is thrown, including a failed item insert or a dropped table. 503 `{ error: "persistence_unavailable" }` when no database was configured or the connection is not open. A failed write does not return an `orderId` |
 | `GET /api/orders/:orderId` | 200 `OrderLookupResult` `FOUND` from a separate `SELECT` | 404 `ABSENT` when the UUID is well formed and no row exists. 400 when the id is not a UUID. 503 `UNAVAILABLE` / `service_unavailable` when SQLite throws or no store is configured. 500 when a row exists but does not satisfy `OrderRecordSchema`. A read failure is never reported as `ABSENT` |
 
-Query parameters and extra JSON fields cannot select a scenario. `?scenario=GHOST_SUCCESS` still persists. The public API does not accept a fault toggle.
+Query parameters and extra JSON fields cannot select a scenario. `?scenario=GHOST_SUCCESS` and a JSON `scenario` field still follow the run's harness scenario, which is `NORMAL` until a harness call changes it. The public API does not accept a fault toggle.
 
 A request-target that cannot be parsed as a URL, such as `//[`, returns 400 `{ error: "invalid_request" }` before any route runs. Valid paths and query strings keep their existing responses. A closed database during checkout returns 503 `{ error: "persistence_unavailable" }`, with no confirmation and no new rows. That 503 means persistence was unavailable. It is not a confirmed absence of an order. Decision D-01 option B is applied. A `SqliteError` during the write stays 500 `{ error: "internal_error" }`.
 
@@ -55,19 +55,19 @@ A request-target that cannot be parsed as a URL, such as `//[`, returns 400 `{ e
 
 Column names are snake_case. Shared order objects are camelCase. The mapping lives in `apps/api/src/orders/sqlite-store.ts`. Inserts use bound parameters inside one `better-sqlite3` transaction. A trigger or constraint failure rolls the transaction back, and the HTTP response is 500 `{ error: "internal_error" }` with no confirmation body.
 
-`GET /api/orders/:orderId` reads the committed rows. It does not echo the checkout response. That read is the API's authoritative lookup. The independent validator package is still QA-11 and is not this route. QA-11 must keep its own read-only connection rather than trusting the confirmation JSON.
+`GET /api/orders/:orderId` reads the committed rows. It does not echo the checkout response. When the run's current harness scenario is `VERIFICATION_UNAVAILABLE`, this route returns 503 before it returns the row. `verifyPersistedOrder` is a separate `SELECT` with the same rule. The independent validator package is still QA-11 and is not this route. QA-11 must keep its own read-only connection rather than trusting the confirmation JSON or this adapter's object.
 
 Startup (`apps/api/src/main.ts`) creates the parent directory for `DATABASE_PATH`, opens SQLite, applies `schema.sql`, and then listens. `pnpm db:migrate` remains the explicit apply command. Apply stays idempotent and does not delete rows.
 
 ## SQLite
 
-`apps/api/db/schema.sql` is the initial schema. `applySchema()` executes that file and is idempotent (`IF NOT EXISTS`). It does not seed products and it does not delete rows. The public `@tqa/api` entry exports `createApp`, `listen`, config readers, and `formatLog` only. Schema apply and `openDatabase` are CLI/test utilities on `@tqa/api/migrate`.
+`apps/api/db/schema.sql` is the initial schema. `applySchema()` executes that file and is idempotent (`IF NOT EXISTS`). It does not seed products and it does not delete rows. The public `@tqa/api` entry exports `createApp`, `listen`, the port and database readers, `readHarnessConfig`, the loopback and token helpers, and `formatLog`. It does not export `openDatabase`, `applySchema`, or `verifyPersistedOrder`. Schema apply and `openDatabase` stay on `@tqa/api/migrate`. The order read stays on `@tqa/api/verify`.
 
 `orders`: `order_id`, `run_id`, `total_cents` (>= 0), `currency` (`USD`), `created_at`.
 
 `order_items`: `order_item_id`, `order_id` (foreign key), `sku`, `quantity` (> 0), `unit_price_cents` (>= 0).
 
-Presence of an `orders` row means persisted. Absence is not represented by a status column. `VERIFICATION_UNAVAILABLE` is still not a stored status.
+Presence of an `orders` row means persisted. Absence is not represented by a status column. `VERIFICATION_UNAVAILABLE` is not a column on `orders`.
 
 ## Shared contracts
 
@@ -90,13 +90,27 @@ Passing typecheck, build, or contract tests does not auto-approve merge and does
 
 ## Harness and faults
 
-No fault-injection route is registered. The harness stays disabled by default. ADR 0001 records the loopback, default-off, timing-safe token comparison, and never-log-token rules QA-05 must implement. Those controls are not implemented in QA-02.
+The harness is disabled unless `TQA_HARNESS=1` and `TQA_HARNESS_TOKEN` is a non-empty process secret. `createApp()` without that token does not mount the control routes. Those routes are `/harness/runs/:runId`, `POST /harness/runs/:runId/scenario`, and `POST /harness/runs/:runId/reset`. They are not under `/api/*` and the storefront does not call them.
 
-QA-02 does not implement `GHOST_SUCCESS` or a scenario-selected `VERIFICATION_UNAVAILABLE` mode. The 503 lookup result exists so a broken or missing SQLite read is `UNAVAILABLE`, not a verified missing order. Turning that into the three demo scenarios, with an isolated reset, remains QA-05. The confirmation string is intentionally the same shape a later ghost response can reuse; today it is sent only after commit.
+A mounted harness still accepts a request only from a loopback peer and only when `x-tqa-harness-token` matches the process secret. The comparison hashes both sides and uses `timingSafeEqual`. A query-string token does not authorize. The token is not written to logs. A missing or wrong token is 401 `{ error: "unauthorized" }`. When the harness is disabled, the same paths are 404.
+
+Scenario state is per `runId`. The default is `NORMAL`. Setting a scenario does not insert an order. `POST /harness/runs/:runId/reset` deletes `orders`, `order_items`, and harness metadata for that `runId` only, then returns the run to `NORMAL`. Repeating the reset deletes zero rows and still returns `NORMAL`.
+
+| Scenario | Checkout response | `orders` / `order_items` | Authoritative read |
+|---|---|---|---|
+| `NORMAL` | 200 `Order confirmed` after commit | Row stored with the server total | `GET /api/orders/:orderId` is 200 `FOUND`. `verifyPersistedOrder` is `CONFIRMED` |
+| `GHOST_SUCCESS` | Same 200 confirmation. The log event is `harness.fault` with `persisted: false`, not `api.checkout_persisted` | No business row. A `harness_checkouts` row records the issued id and `persisted = 0`. That row is not an order | 404 `ABSENT`. `verifyPersistedOrder` is `DEFECT` / `not_persisted` |
+| `VERIFICATION_UNAVAILABLE` | Same 200 confirmation. The log event is `harness.fault` with `persisted: true` | The order is committed | 503 `UNAVAILABLE` / `service_unavailable`, including orders already stored for that run. `verifyPersistedOrder` is `UNKNOWN` and does not return line items or the total. A different unknown id stays 404 `ABSENT` / `DEFECT` |
+
+`verifyPersistedOrder` (`@tqa/api/verify`) runs its own `SELECT` against `orders` and `order_items`. It does not echo the checkout JSON. `VERIFICATION_UNAVAILABLE` is decided before those line items are loaded. This adapter reports `CONFIRMED`, `DEFECT`, or `UNKNOWN`. It does not emit `ALLOW`, `BLOCK`, or `HOLD`. The package `packages/validators` and the gate remain QA-11 and QA-12.
+
+Harness tables are created only when the harness is mounted. They are not part of `schema.sql` and they are not columns on `orders`. A database that already contains `harness_runs` still blocks authoritative reads for a run left in `VERIFICATION_UNAVAILABLE`, even if a later process starts without the token. New checkouts ghost only while the harness is mounted. Clearing a stuck outage requires mounting the harness again and calling reset. The mode uses 503 `service_unavailable`. It does not simulate a timeout. Both results are `UNKNOWN`, not a confirmed missing order.
+
+Direct SQL is a test inspection of the business tables. It is not the authoritative verification path.
 
 ## Explicitly absent
 
-Ghost success, scenario-selected verification outages, harness reset, the evidence collector, the runtime agent, the independent validator, the quality gate, Playwright, the golden dataset, authentication, payments, and deployment. The storefront checkout screen is present. It does not implement those fault modes and it does not look up the order it displays.
+The evidence collector, the runtime agent, the independent validator package, the quality gate, Playwright, the golden dataset, authentication, payments, and deployment. The storefront still has no scenario control and does not call `GET /api/orders/:orderId`. A ghost confirmation can appear on that page; the page still does not decide whether the order was saved.
 
 ## Storefront shell (QA-03) and commerce UI (QA-04)
 
