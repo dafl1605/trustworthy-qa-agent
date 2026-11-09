@@ -1,4 +1,4 @@
-# Architecture — QA-01 scaffold, QA-02 checkout API, QA-03 storefront shell, QA-04 commerce UI, QA-05 fault harness
+# Architecture — QA-01 scaffold, QA-02 checkout API, QA-03 storefront shell, QA-04 commerce UI, QA-05 fault harness, QA-06 Playwright oracle
 
 This note is the as-built skeleton. Observable product behavior still lives in `docs/spec.md`. Domain names live in `docs/architecture-contracts.md`. Foundation choices live in `docs/adr/0001-runtime-foundations.md`.
 
@@ -12,7 +12,7 @@ Requires Node.js `>=22.13.0` (this VM: `22.23.4`) and pnpm `10.33.4`. `runId` an
 | `apps/api` | Loopback Node.js server. `GET /health`, fixture catalog, checkout, order lookup, and the local fault harness. Schema apply lives on `@tqa/api/migrate`. The independent order read lives on `@tqa/api/verify`. Neither is exported from the package root |
 | `packages/shared` | Zod schemas and inferred types for the MVP contracts, including deferred `VerificationResult` and `EvalCase` |
 | `tests/contract` | Schema, migration, health, checkout persistence, order lookup, config, and log checks |
-| `tests/e2e` | Reserved for Playwright (QA-06). Empty |
+| `tests/e2e` | Playwright UI coverage, independent order oracle, and JSON evidence (QA-06) |
 | `tests/evals` | Reserved for the eval runner (QA-14). Empty |
 | `fixtures/golden-dataset` | Reserved for 12 labeled cases (QA-13). Empty |
 
@@ -26,9 +26,12 @@ Supported commands from the repository root:
 
 | Command | Effect |
 |---|---|
-| `pnpm typecheck` | Build shared and API declarations, typecheck the storefront and `tests/contract` |
+| `pnpm typecheck` | Build shared and API declarations, typecheck the storefront, `tests/contract`, and `tests/e2e` |
 | `pnpm build` | `tsc` for shared and API, Vite production build for the storefront |
-| `pnpm test` | Build, typecheck contract tests, run them with `node:test` |
+| `pnpm test` | Build, typecheck contract tests, run them with `node:test`. This does not run Playwright |
+| `pnpm test:e2e` | Build, then the Playwright regression project. The ghost UI case in this project does not check persistence |
+| `pnpm test:e2e:ghost-oracle` | Build, then the persistence oracle on `GHOST_SUCCESS`. A non-zero exit is the expected negative result |
+| `pnpm demo:false-pass` | Replays the limited ghost UI and five failing oracle lookups. Exit 0 means the false PASS was reproduced |
 | `pnpm db:migrate` | Apply `apps/api/db/schema.sql` to `DATABASE_PATH` or `./data/demo.sqlite` |
 | `pnpm --filter @tqa/api start` | Apply the schema, then listen on `127.0.0.1` and `PORT` (default 3001) |
 | `pnpm --filter @tqa/storefront dev` | Vite dev server |
@@ -110,7 +113,17 @@ Direct SQL is a test inspection of the business tables. It is not the authoritat
 
 ## Explicitly absent
 
-The evidence collector, the runtime agent, the independent validator package, the quality gate, Playwright, the golden dataset, authentication, payments, and deployment. The storefront still has no scenario control and does not call `GET /api/orders/:orderId`. A ghost confirmation can appear on that page; the page still does not decide whether the order was saved.
+The evidence collector, the runtime agent, the independent validator package, the quality gate, the golden dataset, authentication, payments, and deployment. The storefront still has no scenario control and does not call `GET /api/orders/:orderId`. A ghost confirmation can appear on that page; the page still does not decide whether the order was saved.
+
+## Playwright (QA-06)
+
+`tests/e2e` starts the built API on `127.0.0.1:3011` with a temporary SQLite file and a generated harness token, then starts `vite preview` on `127.0.0.1:4174` with `TQA_API_ORIGIN` pointed at that API. The browser never receives the token. Scenario setup uses `POST /harness/runs/:runId/scenario` from Playwright's API client.
+
+The limited UI tests assert the confirmation heading and the text `Order confirmed` for `NORMAL`, `GHOST_SUCCESS`, and `VERIFICATION_UNAVAILABLE`. They do not call `GET /api/orders/:orderId`. Their JSON evidence sets `oracle.assertion` to `NOT_CONSULTED`.
+
+The NORMAL oracle requires 200 `FOUND`, the same `runId`, and the catalog total for one mug. The unavailable test requires 503 `UNAVAILABLE` / `service_unavailable` and records `UNKNOWN`. It asserts the status is not 404. The ghost oracle uses the same 200 persistence expectation as NORMAL. On `GHOST_SUCCESS` that expectation fails, the evidence records 404 `ABSENT` / `DEFECT`, and the Playwright project `expected-negative` exits non-zero. `pnpm test` and `pnpm test:e2e` do not include that project.
+
+Five consecutive NORMAL browser checkouts in `repeatability.spec.ts` keep distinct `runId` and `orderId` values, confirm each row, and reset each run twice. Traces and screenshots are kept for passing tests only when `TQA_E2E_DEMO=1`. Ordinary regression retains traces on failure. JSON files under `test-results/evidence/` are the run correlation records. They are not `EvidenceRecord` collector output; that package is still QA-07. They are not a gate decision.
 
 ## Storefront shell (QA-03) and commerce UI (QA-04)
 
@@ -120,6 +133,6 @@ QA-04 fills those sections. On load the page requests `GET /api/products` and re
 
 The storefront does not call `GET /api/orders/:orderId`. A later `GHOST_SUCCESS` response can reuse the same confirmation shape; this page will show it and still will not decide whether the order exists. A failed catalog load or a failed checkout leaves the confirmation empty. Copy for a checkout 503 says the failure is not proof that an order is missing. The API can be down and the shell still renders the error state.
 
-Dev and preview proxy `/api` to `http://127.0.0.1:3001`. The API process still binds loopback only. No CORS header was added.
+Dev and preview proxy `/api` to `TQA_API_ORIGIN`, or to `http://127.0.0.1:3001` when that variable is unset. The API process still binds loopback only. No CORS header was added. The variable is read by the Vite config, not by the browser bundle.
 
 Section labels live in `apps/storefront/src/shell-model.ts`. Cart and checkout transitions live in `apps/storefront/src/commerce-model.ts`. HTTP lives in `apps/storefront/src/api-client.ts`. `tests/contract/storefront-shell.test.ts` and `tests/contract/storefront-commerce.test.ts` lock this behavior without a browser. The static shell copy still has `placesOrder: false` because the copy itself does not submit an order. An unknown section id still says no order was placed.
