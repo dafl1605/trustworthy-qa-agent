@@ -3,9 +3,12 @@ import type { CheckoutEvidenceArtifact } from './schema.js';
 
 function asUntrustedText(value: string): string {
   const normalized = value
+    .replace(/\\/g, '\\\\')
     .replace(/\r/g, '\\r')
     .replace(/\n/g, '\\n')
-    .replace(/\t/g, '\\t');
+    .replace(/\t/g, '\\t')
+    .replace(/\[/g, '\\[')
+    .replace(/\]/g, '\\]');
   return `[UNTRUSTED_TEXT:${normalized}]`;
 }
 
