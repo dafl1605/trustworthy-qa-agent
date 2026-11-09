@@ -80,3 +80,13 @@ Status: ACCEPTED for implementation. The orchestrator instruction selected the n
 - Playwright browser projects were not re-run. This task does not change `tests/e2e` specs, the storefront, or the API
 - Actual elapsed hours: unknown
 - Status: IN_REVIEW once the PR is open. Not DONE
+
+## Review remediation (PR #12)
+
+Reviewed head `f785de33c3a47c53580461a803823d40f643d718`. Comments `6752514867` (head `b2ebe2d`), `6752594453`, and `6752599205` (both on `f785de33`).
+
+- F-01 is valid. Quoted and JSON secrets, `Authorization: Basic`, `cookie` assignments, and a bare `sk-` key of at least 8 characters are now redacted. Ordinary text is unchanged.
+- F-02 stays deferred. `source` remains `db` and `kind` remains `orders-row-count` for a caller-supplied count. Renaming either one needs a later human decision in QA-11.
+- F-02b / F-04 is valid. Brackets inside `[UNTRUSTED_TEXT:…]` are escaped.
+- F-03 is the PR description, corrected outside this file after the new head exists.
+- Status stays IN_REVIEW. Not DONE. QA-08 does not start from this note.
