@@ -1,15 +1,18 @@
+
 name: TQA - Risk Router (Free)
 
-# Runs after the EXISTING validation/auto-PR workflow finishes.
-# No PAT, external LLM subscription, or pull_request_target required.
 on:
   workflow_run:
     workflows: ["TQA - Validate and Open PR"]
     types: [completed]
+
+  pull_request_target:
+    types: [opened, reopened, synchronize, ready_for_review]
+
   workflow_dispatch:
     inputs:
       pr_number:
-        description: "Existing PR number to classify (manual fallback)"
+        description: "PR number to classify"
         required: true
         type: string
 
@@ -17,31 +20,36 @@ permissions:
   contents: read
 
 concurrency:
-  group: tqa-router-${{ github.event.workflow_run.head_branch || github.event.inputs.pr_number || github.run_id }}
+  group: tqa-router-${{ github.event.pull_request.number || github.event.workflow_run.head_branch || github.event.inputs.pr_number || github.run_id }}
   cancel-in-progress: true
 
 jobs:
   classify:
-    # Never handle workflows started from a different repository.
     if: >-
       github.event_name == 'workflow_dispatch' ||
-      (github.event.workflow_run.event == 'push' &&
+      (github.event_name == 'pull_request_target' &&
+       github.event.pull_request.head.repo.full_name == github.repository) ||
+      (github.event_name == 'workflow_run' &&
+       github.event.workflow_run.event == 'push' &&
        github.event.workflow_run.head_repository.full_name == github.repository)
+
     runs-on: ubuntu-latest
     timeout-minutes: 5
+
     permissions:
       contents: read
-      pull-requests: read
+      pull-requests: write
       issues: write
+
     steps:
-      - name: Checkout trusted default branch ONLY
-        uses: actions/checkout@v4
+      - name: Checkout trusted main only
+        uses: actions/checkout@v5
         with:
           ref: main
           persist-credentials: false
 
-      - name: Inspect PR and route labels (no code execution from PR)
-        uses: actions/github-script@v7
+      - name: Inspect PR and route labels
+        uses: actions/github-script@v8
         env:
           TQA_ROUTER_DRY_RUN: ${{ vars.TQA_ROUTER_DRY_RUN || 'true' }}
           TQA_AUTO_CLOUD_FIX: ${{ vars.TQA_AUTO_CLOUD_FIX || 'false' }}
