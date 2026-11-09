@@ -107,21 +107,27 @@ function session(
   );
 }
 
-function packageSource(): string {
+function sourceFiles(): { name: string; source: string }[] {
   const directory = resolve(import.meta.dirname, '../../packages/qa-agent/src');
   return readdirSync(directory)
     .filter((name) => name.endsWith('.ts'))
-    .map((name) => readFileSync(resolve(directory, name), 'utf8'))
-    .join('\n');
+    .map((name) => ({ name, source: readFileSync(resolve(directory, name), 'utf8') }));
 }
 
 describe('read-only investigation tools', () => {
-  it('exports only the tool session surface', () => {
+  it('exports the tool session and the investigation surface', () => {
     assert.deepEqual(Object.keys(agent).sort(), [
+      'INVESTIGATION_SYSTEM_PROMPT',
+      'InvestigationConfigError',
+      'InvestigationReportSchema',
       'READ_ONLY_TOOL_NAMES',
       'ReadOnlyToolSession',
       'ToolConfigError',
       'ToolResultSchema',
+      'createOpenAiCompatibleProvider',
+      'createScriptedProvider',
+      'readOpenAiCompatibleSettings',
+      'runInvestigation',
     ]);
     assert.deepEqual([...READ_ONLY_TOOL_NAMES], [
       'get_test_result',
@@ -132,8 +138,17 @@ describe('read-only investigation tools', () => {
     ]);
   });
 
-  it('does not reference a shell, a database driver, or a network client', () => {
-    assert.equal(/child_process|better-sqlite3|node:sqlite|node:http|playwright|fetch\(/.test(packageSource()), false);
+  it('does not reference a shell or a database driver', () => {
+    const files = sourceFiles();
+    for (const file of files) {
+      assert.equal(/child_process|better-sqlite3|node:sqlite|node:http|playwright/.test(file.source), false, file.name);
+      if (file.name !== 'provider.ts') {
+        assert.equal(file.source.includes('fetch('), false, file.name);
+      }
+    }
+    const provider = files.find((file) => file.name === 'provider.ts');
+    assert.ok(provider);
+    assert.equal(provider.source.split('fetch(').length - 1, 1);
   });
 
   it('lists collector summaries without adding a record', () => {

@@ -21,7 +21,9 @@ After **QA-06**, Playwright can drive the storefront. `pnpm test:e2e` passes a l
 
 After **QA-07**, `@tqa/evidence-collector` turns checkout observations into `EvidenceRecord` values and links `runId` with `orderId`. A UI confirmation record says the screen is not proof the order was saved. A 404 `ABSENT` record stays distinct from a 503 `UNAVAILABLE` record. A cited evidence id that is missing stays unknown. The package does not decide `ALLOW`, `BLOCK`, or `HOLD`, and it does not read or write SQLite. Playwright still writes its own JSON under `test-results/evidence/`.
 
-After **QA-08**, `@tqa/qa-agent` can run five read-only tools: `get_test_result`, `list_evidence`, `get_network_events`, `lookup_order`, and `get_application_logs`. Any other name is denied. A 404 observation stays distinct from a 503 or a timeout. The tools do not decide `ALLOW`, `BLOCK`, or `HOLD`, and they do not open SQLite. The LLM adapter is not in this package yet.
+After **QA-08**, `@tqa/qa-agent` can run five read-only tools: `get_test_result`, `list_evidence`, `get_network_events`, `lookup_order`, and `get_application_logs`. Any other name is denied. A 404 observation stays distinct from a 503 or a timeout. The tools do not decide `ALLOW`, `BLOCK`, or `HOLD`, and they do not open SQLite.
+
+After **QA-09**, the same package can run one bounded investigation. A scripted provider replays fixture turns and is marked `scripted-mock`, which is not a live model result. An OpenAI-compatible provider is optional and stays unconfigured unless `LLM_PROVIDER=openai-compatible` plus a base URL, a model name, and an API key are supplied outside the repo. The loop can retry a provider timeout. It cannot retry an order lookup into a different verdict. The report leaves `orderClassified` false and `gateDecision` null. Diagnosis claims are not parsed yet.
 
 ## Requirements
 
