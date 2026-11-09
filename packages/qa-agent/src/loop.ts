@@ -218,9 +218,37 @@ export async function runInvestigation(options: {
         providerRetries += 1;
       }
       const controller = new AbortController();
-      const timer = setTimeout(() => controller.abort(), limits.data.timeoutMs);
+      let timedOut = false;
+      let timer: ReturnType<typeof setTimeout> | undefined;
       try {
-        const turn = await options.provider.complete({ messages, signal: controller.signal });
+        const turn = await new Promise<ProviderTurn>((resolve, reject) => {
+          timer = setTimeout(() => {
+            timedOut = true;
+            controller.abort();
+            reject(new Error('provider timeout'));
+          }, limits.data.timeoutMs);
+          try {
+            Promise.resolve(options.provider.complete({ messages, signal: controller.signal })).then(
+              (value) => {
+                if (timer !== undefined) {
+                  clearTimeout(timer);
+                }
+                resolve(value);
+              },
+              (error: unknown) => {
+                if (timer !== undefined) {
+                  clearTimeout(timer);
+                }
+                reject(error);
+              },
+            );
+          } catch (error) {
+            if (timer !== undefined) {
+              clearTimeout(timer);
+            }
+            reject(error);
+          }
+        });
         if (turn.kind === 'tool_call' || turn.kind === 'final') {
           return turn;
         }
@@ -236,12 +264,14 @@ export async function runInvestigation(options: {
           return last;
         }
       } catch {
-        last = { kind: 'unavailable', reason: controller.signal.aborted ? 'timeout' : 'transport' };
+        last = { kind: 'unavailable', reason: timedOut || controller.signal.aborted ? 'timeout' : 'transport' };
         if (attempt === limits.data.maxRetries) {
           return last;
         }
       } finally {
-        clearTimeout(timer);
+        if (timer !== undefined) {
+          clearTimeout(timer);
+        }
       }
     }
     return last;

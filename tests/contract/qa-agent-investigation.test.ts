@@ -144,6 +144,42 @@ describe('bounded investigation loop', { concurrency: false }, () => {
     assert.equal(report.gateDecision, null);
   });
 
+  it('bounds a provider that ignores the abort signal', async () => {
+    const started = Date.now();
+    let calls = 0;
+    const provider: LlmProvider = {
+      label: 'scripted-mock',
+      model: 'scripted-mock',
+      resultOrigin: 'scripted-mock',
+      complete() {
+        calls += 1;
+        return new Promise<never>(() => {
+          // This provider never observes the signal and never settles.
+        });
+      },
+    };
+    const report = await investigate({
+      runId,
+      session: session(),
+      maxRetries: 1,
+      provider,
+    });
+    const elapsed = Date.now() - started;
+    assert.equal(calls, 2);
+    assert.equal(report.status, 'PROVIDER_UNAVAILABLE');
+    assert.equal(report.stopReason, 'provider_timeout');
+    assert.equal(report.providerHttpStatus, null);
+    assert.equal(report.providerAttempts, 2);
+    assert.equal(report.providerRetries, 1);
+    assert.equal(report.observations.length, 0);
+    assert.equal(report.untrustedFinalText, null);
+    assert.match(report.note, /not a missing order/);
+    assert.equal(JSON.stringify(report).includes('ABSENT'), false);
+    assert.equal(report.orderClassified, false);
+    assert.equal(report.gateDecision, null);
+    assert.ok(elapsed < 2_000, `elapsed ${elapsed}ms`);
+  });
+
   it('retries a transport failure once and does not copy the provider error', async () => {
     const report = await investigate({
       runId,
