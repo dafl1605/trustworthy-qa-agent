@@ -11,7 +11,9 @@ After **QA-01**, the repo includes a pnpm monorepo scaffold (`apps/storefront`, 
 
 After **QA-02**, the API serves `GET /api/products`, `POST /api/checkout`, and `GET /api/orders/:orderId`. A normal checkout is persisted in SQLite before the confirmation response. Fault injection is not mounted.
 
-After **QA-03**, the storefront is an accessible shell with Catalog, Cart, Checkout, and Confirmation sections. Those sections do not list products, keep a cart, or submit an order. The checkout screen remains QA-04. A draft meetup abstract, agenda, and bio checklist lives in [`docs/speaker/2026-11-25-browserstack-draft.md`](docs/speaker/2026-11-25-browserstack-draft.md). It has not been sent.
+After **QA-03**, the storefront has an accessible shell with Catalog, Cart, Checkout, and Confirmation sections. A draft meetup abstract, agenda, and bio checklist lives in [`docs/speaker/2026-11-25-browserstack-draft.md`](docs/speaker/2026-11-25-browserstack-draft.md). It has not been sent.
+
+After **QA-04**, those sections list the local catalog, keep a cart of up to 3 products, and submit `POST /api/checkout`. The confirmation shows the checkout response. It does not call `GET /api/orders/:orderId`, and the page says that message is not proof the order was saved. Fault modes remain QA-05.
 
 ## Requirements
 
@@ -28,6 +30,7 @@ pnpm build
 pnpm test
 pnpm db:migrate
 pnpm --filter @tqa/api start   # loopback API on 127.0.0.1:3001
+pnpm --filter @tqa/storefront dev   # proxies /api to 127.0.0.1:3001
 ```
 
 See [`docs/architecture.md`](docs/architecture.md) for layout and ADRs.

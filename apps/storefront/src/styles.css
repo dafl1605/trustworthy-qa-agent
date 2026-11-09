@@ -23,8 +23,14 @@ body {
   transform: translateY(0.5rem);
 }
 
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
 .shell {
-  max-width: 48rem;
+  max-width: 60rem;
   margin: 0 auto;
   padding: 1.5rem;
 }
@@ -87,6 +93,7 @@ p {
 }
 
 button:focus-visible,
+input:focus-visible,
 .skip-link:focus,
 h2:focus,
 main:focus {
@@ -94,10 +101,112 @@ main:focus {
   outline-offset: 2px;
 }
 
-[role='status'] {
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.65;
+}
+
+[role='status'],
+[role='alert'] {
   border: 2px solid #0b3a5b;
   background: #ffffff;
   padding: 0.75rem 1rem;
+}
+
+[role='alert'] {
+  border-color: #6b2d00;
+  background: #fff8f3;
+}
+
+.product-list,
+.cart-list,
+.checkout-summary {
+  display: grid;
+  gap: 1rem;
+  margin: 0 0 1rem;
+  padding: 0;
+  list-style: none;
+}
+
+.product-list {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 14rem), 1fr));
+}
+
+.product-list article,
+.cart-list li,
+form {
+  background: #ffffff;
+  border: 2px solid #6f675e;
+  border-radius: 0.25rem;
+  padding: 1rem;
+}
+
+.product-list h3,
+.cart-list h3 {
+  margin: 0 0 0.5rem;
+  font-size: 1.25rem;
+}
+
+.product-list button,
+.cart-list button,
+form button {
+  font: inherit;
+  font-size: 1rem;
+  color: inherit;
+  background: #ffffff;
+  border: 2px solid #0b3a5b;
+  border-radius: 0.25rem;
+  padding: 0.5rem 0.75rem;
+  min-height: 2.75rem;
+  cursor: pointer;
+}
+
+.cents {
+  font-family: "Segoe UI", sans-serif;
+  font-size: 0.95rem;
+}
+
+label {
+  display: block;
+  font-family: "Segoe UI", sans-serif;
+  font-size: 1rem;
+  margin-bottom: 0.25rem;
+}
+
+input {
+  font: inherit;
+  font-size: 1rem;
+  color: inherit;
+  background: #ffffff;
+  border: 2px solid #6f675e;
+  border-radius: 0.25rem;
+  padding: 0.4rem 0.5rem;
+  min-height: 2.75rem;
+  width: 100%;
+  max-width: 36rem;
+}
+
+.cart-list input {
+  max-width: 6rem;
+}
+
+dl {
+  margin: 0;
+}
+
+dl div {
+  margin-bottom: 0.75rem;
+}
+
+dt {
+  font-family: "Segoe UI", sans-serif;
+  font-size: 0.95rem;
+}
+
+dd {
+  margin: 0;
+  font-size: 1.05rem;
+  overflow-wrap: anywhere;
 }
 
 .note {
