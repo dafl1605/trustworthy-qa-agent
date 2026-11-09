@@ -1,13 +1,21 @@
 import type { CheckoutConfirmation, OrderLookupResult } from '@tqa/shared';
 import type { CheckoutEvidenceArtifact } from './schema.js';
 
+function asUntrustedText(value: string): string {
+  const normalized = value
+    .replace(/\r/g, '\\r')
+    .replace(/\n/g, '\\n')
+    .replace(/\t/g, '\\t');
+  return `[UNTRUSTED_TEXT:${normalized}]`;
+}
+
 export function uiConfirmationSummary(message: string, scenarioLabel?: string): string {
   const scenario = scenarioLabel ? ` Scenario label in the file is ${scenarioLabel}.` : '';
-  return `UI confirmation said "${message}".${scenario} This screen is not proof the order was saved.`;
+  return `UI confirmation said ${asUntrustedText(message)}.${scenario} This screen is not proof the order was saved.`;
 }
 
 export function checkoutResponseSummary(confirmation: CheckoutConfirmation): string {
-  return `Checkout response said "${confirmation.message}" with totalCents ${confirmation.totalCents} for order ${confirmation.orderId}. This response is not an authoritative persistence read and not a gate decision.`;
+  return `Checkout response said ${asUntrustedText(confirmation.message)} with totalCents ${confirmation.totalCents} for order ${confirmation.orderId}. This response is not an authoritative persistence read and not a gate decision.`;
 }
 
 export function orderLookupSummary(lookup: OrderLookupResult): string {
