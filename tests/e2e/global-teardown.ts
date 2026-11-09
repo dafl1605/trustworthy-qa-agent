@@ -1,4 +1,5 @@
 import { existsSync } from 'node:fs';
+import { removeTemporaryDatabase } from './database-dir.ts';
 import { runtimePath, readRuntime } from './runtime.ts';
 
 function stopGroup(pid: number): void {
@@ -34,4 +35,5 @@ export default function globalTeardown(): void {
   stopGroup(runtime.apiPid);
   waitUntilGone(runtime.webPid);
   waitUntilGone(runtime.apiPid);
+  removeTemporaryDatabase(runtime.databasePath);
 }
