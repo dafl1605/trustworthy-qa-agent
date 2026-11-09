@@ -19,6 +19,8 @@ After **QA-05**, the API can run `NORMAL`, `GHOST_SUCCESS`, and `VERIFICATION_UN
 
 After **QA-06**, Playwright can drive the storefront. `pnpm test:e2e` passes a limited confirmation check for `GHOST_SUCCESS` without reading the order, and it runs a separate control that the injected ghost order is still 404 `ABSENT`. That control is not a persistence pass. `pnpm test:e2e:ghost-oracle` keeps the persistence assertion and is expected to fail that case with 404 `ABSENT`. `pnpm demo:false-pass` records five of those failures. See [`tests/e2e/README.md`](tests/e2e/README.md).
 
+After **QA-07**, `@tqa/evidence-collector` turns checkout observations into `EvidenceRecord` values and links `runId` with `orderId`. A UI confirmation record says the screen is not proof the order was saved. A 404 `ABSENT` record stays distinct from a 503 `UNAVAILABLE` record. A cited evidence id that is missing stays unknown. The package does not decide `ALLOW`, `BLOCK`, or `HOLD`, and it does not read or write SQLite. Playwright still writes its own JSON under `test-results/evidence/`.
+
 ## Requirements
 
 - Node.js `>=22.13.0` (verified on `22.23.4`)
