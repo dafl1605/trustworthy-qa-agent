@@ -76,7 +76,7 @@ Status: ACCEPTED for implementation. The orchestrator instruction selected the n
 - `pnpm install --frozen-lockfile` exited 0
 - `pnpm typecheck` exited 0
 - `pnpm build` exited 0. Vite wrote `dist/assets/index--P-9X6xF.js` at 234.64 kB
-- `pnpm test` exited 0. Node reported `tests 73`, `pass 73`, `fail 0`, `duration_ms 828.366699`
+- `pnpm test` exited 0. Node reported `tests 73`, `pass 73`, `fail 0`, `duration_ms 828.366699`. This count is the first QA-07 run on this branch. Later remediations are recorded in the review section below and in `docs/progress/2026-11-09.md`.
 - Playwright browser projects were not re-run. This task does not change `tests/e2e` specs, the storefront, or the API
 - Actual elapsed hours: unknown
 - Status: IN_REVIEW once the PR is open. Not DONE
@@ -88,6 +88,6 @@ Reviewed head `f785de33c3a47c53580461a803823d40f643d718`. Comments `6752514867` 
 - F-01 is valid. Quoted and JSON secrets, `Authorization: Basic`, `cookie` assignments, and a bare `sk-` key of at least 8 characters are now redacted. Ordinary text is unchanged.
 - F-02 stays deferred. `source` remains `db` and `kind` remains `orders-row-count` for a caller-supplied count. Renaming either one needs a later human decision in QA-11.
 - F-02b / F-04 is valid. Brackets inside `[UNTRUSTED_TEXT:…]` are escaped.
-- F-03 is the PR description. The GitHub body was still the QA-06 text after that note. The next remediation rewrites it and checks the body again.
+- F-03 is the PR description. The GitHub body was still the QA-06 text after the notes on `4fb87d9` and `76cacee`. Comments `6752975831` and `6752983846` confirmed that on `76cacee`. This plan does not claim the body changed. The handler updates the GitHub body after the push and records the read-back in the PR comment.
 - A later review of head `4fb87d9756531c5c8ba5e8fdca37cdf9fc33c2ff` found a remaining cookie-header leak, an `Authorization` scheme other than Bearer or Basic, and a quoted value with an escaped quote. Those are corrected in `redact.ts`. `source` and `kind` for the caller-supplied row count stay unchanged.
 - Status stays IN_REVIEW. Not DONE. QA-08 does not start from this note.
