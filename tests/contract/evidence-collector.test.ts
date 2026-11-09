@@ -69,6 +69,9 @@ describe('evidence collector', () => {
       'EvidenceDraftSchema',
       'EvidenceValidationError',
       'SUMMARY_LIMIT',
+      'boundSummary',
+      'prepareSummary',
+      'redactText',
     ]);
   });
 

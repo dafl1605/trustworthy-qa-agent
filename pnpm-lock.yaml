@@ -26,6 +26,9 @@ importers:
       '@tqa/evidence-collector':
         specifier: workspace:*
         version: link:packages/evidence-collector
+      '@tqa/qa-agent':
+        specifier: workspace:*
+        version: link:packages/qa-agent
       '@tqa/shared':
         specifier: workspace:*
         version: link:packages/shared
@@ -82,6 +85,25 @@ importers:
 
   packages/evidence-collector:
     dependencies:
+      '@tqa/shared':
+        specifier: workspace:*
+        version: link:../shared
+      zod:
+        specifier: 4.6.7
+        version: 4.6.7
+    devDependencies:
+      '@types/node':
+        specifier: 'catalog:'
+        version: 22.20.5
+      typescript:
+        specifier: 'catalog:'
+        version: 7.0.2
+
+  packages/qa-agent:
+    dependencies:
+      '@tqa/evidence-collector':
+        specifier: workspace:*
+        version: link:../evidence-collector
       '@tqa/shared':
         specifier: workspace:*
         version: link:../shared

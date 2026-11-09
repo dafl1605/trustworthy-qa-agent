@@ -1,4 +1,4 @@
-# Architecture — QA-01 scaffold, QA-02 checkout API, QA-03 storefront shell, QA-04 commerce UI, QA-05 fault harness, QA-06 Playwright oracle, QA-07 evidence collector
+# Architecture — QA-01 scaffold, QA-02 checkout API, QA-03 storefront shell, QA-04 commerce UI, QA-05 fault harness, QA-06 Playwright oracle, QA-07 evidence collector, QA-08 read-only tools
 
 This note is the as-built skeleton. Observable product behavior still lives in `docs/spec.md`. Domain names live in `docs/architecture-contracts.md`. Foundation choices live in `docs/adr/0001-runtime-foundations.md`.
 
@@ -12,23 +12,24 @@ Requires Node.js `>=22.13.0` (this VM: `22.23.4`) and pnpm `10.33.4`. `runId` an
 | `apps/api` | Loopback Node.js server. `GET /health`, fixture catalog, checkout, order lookup, and the local fault harness. Schema apply lives on `@tqa/api/migrate`. The independent order read lives on `@tqa/api/verify`. Neither is exported from the package root |
 | `packages/shared` | Zod schemas and inferred types for the MVP contracts, including deferred `VerificationResult` and `EvalCase` |
 | `packages/evidence-collector` | In-memory `EvidenceRecord` index. Correlates `runId` and `orderId`. Does not open SQLite and does not decide a gate |
+| `packages/qa-agent` | Five read-only investigation tools. No LLM adapter, no gate, no SQLite |
 | `tests/contract` | Schema, migration, health, checkout persistence, order lookup, config, and log checks |
 | `tests/e2e` | Playwright UI coverage, independent order oracle, and JSON evidence (QA-06) |
 | `tests/evals` | Reserved for the eval runner (QA-14). Empty |
 | `fixtures/golden-dataset` | Reserved for 12 labeled cases (QA-13). Empty |
 
-Later packages from the contract doc are not created yet: `qa-agent`, `validators`, and `quality-gate`. `@tqa/evidence-collector` is the QA-07 package.
+`@tqa/qa-agent` is the QA-08 tool package. It does not yet contain the provider adapter or the actor loop. Later packages from the contract doc are not created yet: `validators` and `quality-gate`. `@tqa/evidence-collector` is the QA-07 package.
 
 ## Workspace
 
-pnpm workspaces (`pnpm-workspace.yaml`). Package names: `@tqa/storefront`, `@tqa/api`, `@tqa/shared`, `@tqa/evidence-collector`. TypeScript strict settings, including `noUncheckedIndexedAccess`, live in `tsconfig.base.json`. `@tqa/api` and `@tqa/evidence-collector` depend on `@tqa/shared`. The storefront does not, so the UI bundle does not pull Zod in before it has a UI contract to use.
+pnpm workspaces (`pnpm-workspace.yaml`). Package names: `@tqa/storefront`, `@tqa/api`, `@tqa/shared`, `@tqa/evidence-collector`, `@tqa/qa-agent`. TypeScript strict settings, including `noUncheckedIndexedAccess`, live in `tsconfig.base.json`. `@tqa/api` and `@tqa/evidence-collector` depend on `@tqa/shared`. `@tqa/qa-agent` depends on both. The storefront does not, so the UI bundle does not pull Zod in before it has a UI contract to use.
 
 Supported commands from the repository root:
 
 | Command | Effect |
 |---|---|
-| `pnpm typecheck` | Build shared, evidence collector, and API declarations, typecheck the storefront, `tests/contract`, and `tests/e2e` |
-| `pnpm build` | `tsc` for shared, evidence collector, and API, Vite production build for the storefront |
+| `pnpm typecheck` | Build shared, evidence collector, read-only tools, and API declarations, typecheck the storefront, `tests/contract`, and `tests/e2e` |
+| `pnpm build` | `tsc` for shared, evidence collector, read-only tools, and API, Vite production build for the storefront |
 | `pnpm test` | Build, typecheck contract tests, run them with `node:test`. This does not run Playwright |
 | `pnpm test:e2e` | Build, then the Playwright regression project. The ghost UI case does not check persistence. A separate characterization test expects the injected ghost order to stay absent |
 | `pnpm test:e2e:ghost-oracle` | Build, then the persistence oracle on `GHOST_SUCCESS`. A non-zero exit is the expected negative result |
@@ -124,11 +125,25 @@ A UI confirmation summary says the screen is not proof the order was saved. A cl
 
 `citation([])` is `UNVERIFIED`. `citation` of an id that is not in the index is `UNKNOWN_IDS` and does not invent a record. `RESOLVED` means every cited id exists. It does not mean the claim text is true, and it does not authorize a gate `ALLOW`. Repeating the same checkout artifact returns the existing records.
 
-Playwright still writes `test-results/evidence/*.json` itself. QA-08 is the next task and is not this package.
+Playwright still writes `test-results/evidence/*.json` itself. The collector is not called by the e2e runner. `redactText`, `boundSummary`, and `prepareSummary` are exported so the read-only tools use the same redaction. Their replacement rules are unchanged.
+
+## Read-only tools (QA-08)
+
+`@tqa/qa-agent` exposes `ReadOnlyToolSession`. The only tool names it executes are `get_test_result`, `list_evidence`, `get_network_events`, `lookup_order`, and `get_application_logs`. Any other name, including a shell, a database write, a gate approval, or a browse request, returns `DENIED` and is not executed. The package source does not start a process, open SQLite, or call `fetch`.
+
+Inputs are strict objects. An unknown field, a bad UUID, or a limit outside 1–20 is `INVALID_INPUT`. The raw argument is not copied into the result or the call log. A secret-shaped evidence id, log id, event id, or network path is rejected when the session is constructed. Log text and UI messages may contain secrets; those strings are redacted on the way out and labeled as untrusted data. An instruction inside a log does not add a tool or change the next decision.
+
+`maxRecords` is 1–20 and defaults to 20. `maxCalls` is 1–5 and defaults to 5. `timeoutMs` is 1–5000 and defaults to 1000. The call after the budget returns `LIMIT`. The audit log stores at most one entry past the budget.
+
+`list_evidence` reads `summariesForRun` at call time and does not add records. `get_test_result` and `get_network_events` read rows copied at construction. A UI `PASS` summary says the screen is not proof the order was saved. A consulted 404 `ABSENT` stays distinct from a consulted 503 `UNAVAILABLE`. Disagreeing oracle fields stay inconsistent and are not turned into a confirmed missing order.
+
+`lookup_order` calls an injected function and aborts that call when `timeoutMs` elapses. A returned 404 `ABSENT` is `OK` with `observation: 'ABSENT'`. A returned 503 is `UNAVAILABLE` and does not say the order is missing. A session deadline is `TIMEOUT` and is not a 404. `OK` means the tool returned an observation. It is not a release approval. The injected function is not the QA-11 validator, and this package does not emit `ALLOW`, `BLOCK`, or `HOLD`.
+
+The provider adapter, the bounded actor loop, and retries are QA-09. Diagnosis claims are QA-10. There is no automatic retry in this package.
 
 ## Explicitly absent
 
-The runtime agent, the independent validator package, the quality gate, the golden dataset, authentication, payments, and deployment. The storefront still has no scenario control and does not call `GET /api/orders/:orderId`. A ghost confirmation can appear on that page; the page still does not decide whether the order was saved.
+The LLM provider, the actor loop, the independent validator package, the quality gate, the golden dataset, authentication, payments, and deployment. The read-only tool session is present and is not that agent. The storefront still has no scenario control and does not call `GET /api/orders/:orderId`. A ghost confirmation can appear on that page; the page still does not decide whether the order was saved.
 
 ## Playwright (QA-06)
 

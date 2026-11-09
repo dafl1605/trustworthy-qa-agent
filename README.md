@@ -21,6 +21,8 @@ After **QA-06**, Playwright can drive the storefront. `pnpm test:e2e` passes a l
 
 After **QA-07**, `@tqa/evidence-collector` turns checkout observations into `EvidenceRecord` values and links `runId` with `orderId`. A UI confirmation record says the screen is not proof the order was saved. A 404 `ABSENT` record stays distinct from a 503 `UNAVAILABLE` record. A cited evidence id that is missing stays unknown. The package does not decide `ALLOW`, `BLOCK`, or `HOLD`, and it does not read or write SQLite. Playwright still writes its own JSON under `test-results/evidence/`.
 
+After **QA-08**, `@tqa/qa-agent` can run five read-only tools: `get_test_result`, `list_evidence`, `get_network_events`, `lookup_order`, and `get_application_logs`. Any other name is denied. A 404 observation stays distinct from a 503 or a timeout. The tools do not decide `ALLOW`, `BLOCK`, or `HOLD`, and they do not open SQLite. The LLM adapter is not in this package yet.
+
 ## Requirements
 
 - Node.js `>=22.13.0` (verified on `22.23.4`)
