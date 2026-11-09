@@ -23,12 +23,14 @@ After **QA-06**, Playwright can drive the storefront. `pnpm test:e2e` passes a l
 
 - Node.js `>=22.13.0` (verified on `22.23.4`)
 - pnpm `10.33.4` (`packageManager` in `package.json`)
+- Chromium for Playwright `1.65.0`: `pnpm exec playwright install chromium`. That package needs its matching browser build. Until the browser is installed, `pnpm test:e2e` stops with `Executable doesn't exist` and does not run an assertion.
 - `runId` and `orderId` are UUIDs (Zod `z.uuid()` at shared contract boundaries)
 
 ## Local commands (after QA-01)
 
 ```bash
 pnpm install
+pnpm exec playwright install chromium
 pnpm typecheck
 pnpm build
 pnpm test

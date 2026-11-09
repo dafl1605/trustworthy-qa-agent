@@ -2,6 +2,16 @@
 
 QA-06 uses Playwright against the built storefront and a loopback API. The storefront still has no scenario control. The fixture arms `NORMAL`, `GHOST_SUCCESS`, or `VERIFICATION_UNAVAILABLE` through the local harness, then the browser only checks the confirmation screen.
 
+## Browser
+
+`@playwright/test` is pinned to `1.65.0`. Install the Chromium build that matches that package before the first browser run:
+
+```bash
+pnpm exec playwright install chromium
+```
+
+Without that browser, `pnpm test:e2e` fails with `Executable doesn't exist`. Installing Chromium does not change the assertions.
+
 ## What a green result means
 
 `pnpm test:e2e` runs the regression project. It includes a limited UI test that passes for every scenario, including `GHOST_SUCCESS`. That pass does not read `GET /api/orders/:orderId`. A green regression run is not proof that an order was saved.
