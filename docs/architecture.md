@@ -1,4 +1,4 @@
-# Architecture — QA-01 scaffold, QA-02 checkout API, QA-03 storefront shell, QA-04 commerce UI, QA-05 fault harness, QA-06 Playwright oracle, QA-07 evidence collector, QA-08 read-only tools
+# Architecture — QA-01 scaffold, QA-02 checkout API, QA-03 storefront shell, QA-04 commerce UI, QA-05 fault harness, QA-06 Playwright oracle, QA-07 evidence collector, QA-08 read-only tools, QA-09 investigation loop
 
 This note is the as-built skeleton. Observable product behavior still lives in `docs/spec.md`. Domain names live in `docs/architecture-contracts.md`. Foundation choices live in `docs/adr/0001-runtime-foundations.md`.
 
@@ -12,13 +12,13 @@ Requires Node.js `>=22.13.0` (this VM: `22.23.4`) and pnpm `10.33.4`. `runId` an
 | `apps/api` | Loopback Node.js server. `GET /health`, fixture catalog, checkout, order lookup, and the local fault harness. Schema apply lives on `@tqa/api/migrate`. The independent order read lives on `@tqa/api/verify`. Neither is exported from the package root |
 | `packages/shared` | Zod schemas and inferred types for the MVP contracts, including deferred `VerificationResult` and `EvalCase` |
 | `packages/evidence-collector` | In-memory `EvidenceRecord` index. Correlates `runId` and `orderId`. Does not open SQLite and does not decide a gate |
-| `packages/qa-agent` | Five read-only investigation tools. No LLM adapter, no gate, no SQLite |
+| `packages/qa-agent` | Five read-only investigation tools, one provider adapter, and one bounded actor loop. No diagnosis schema, no gate, no SQLite |
 | `tests/contract` | Schema, migration, health, checkout persistence, order lookup, config, and log checks |
 | `tests/e2e` | Playwright UI coverage, independent order oracle, and JSON evidence (QA-06) |
 | `tests/evals` | Reserved for the eval runner (QA-14). Empty |
 | `fixtures/golden-dataset` | Reserved for 12 labeled cases (QA-13). Empty |
 
-`@tqa/qa-agent` is the QA-08 tool package. It does not yet contain the provider adapter or the actor loop. Later packages from the contract doc are not created yet: `validators` and `quality-gate`. `@tqa/evidence-collector` is the QA-07 package.
+`@tqa/qa-agent` is the QA-08 tool package and the QA-09 investigation loop. It does not yet parse a diagnosis. Later packages from the contract doc are not created yet: `validators` and `quality-gate`. `@tqa/evidence-collector` is the QA-07 package.
 
 ## Workspace
 
@@ -129,7 +129,7 @@ Playwright still writes `test-results/evidence/*.json` itself. The collector is 
 
 ## Read-only tools (QA-08)
 
-`@tqa/qa-agent` exposes `ReadOnlyToolSession`. The only tool names it executes are `get_test_result`, `list_evidence`, `get_network_events`, `lookup_order`, and `get_application_logs`. Any other name, including a shell, a database write, a gate approval, or a browse request, returns `DENIED` and is not executed. The package source does not start a process, open SQLite, or call `fetch`.
+`@tqa/qa-agent` exposes `ReadOnlyToolSession`. The only tool names it executes are `get_test_result`, `list_evidence`, `get_network_events`, `lookup_order`, and `get_application_logs`. Any other name, including a shell, a database write, a gate approval, or a browse request, returns `DENIED` and is not executed. The tool session and the actor loop do not start a process, open SQLite, or call `fetch`. The provider module is the only file that calls `fetch`.
 
 Inputs are strict objects. An unknown field, a bad UUID, or a limit outside 1–20 is `INVALID_INPUT`. The raw argument is not copied into the result or the call log. A secret-shaped evidence id, log id, event id, or network path is rejected when the session is constructed. Log text and UI messages may contain secrets; those strings are redacted on the way out and labeled as untrusted data. An instruction inside a log does not add a tool or change the next decision.
 
@@ -139,11 +139,25 @@ Inputs are strict objects. An unknown field, a bad UUID, or a limit outside 1–
 
 `lookup_order` calls an injected function and aborts that call when `timeoutMs` elapses. A returned 404 `ABSENT` is `OK` with `observation: 'ABSENT'`. A returned 503 is `UNAVAILABLE` and does not say the order is missing. A session deadline is `TIMEOUT` and is not a 404. `OK` means the tool returned an observation. It is not a release approval. The injected function is not the QA-11 validator, and this package does not emit `ALLOW`, `BLOCK`, or `HOLD`.
 
-The provider adapter, the bounded actor loop, and retries are QA-09. Diagnosis claims are QA-10. There is no automatic retry in this package.
+Diagnosis claims are QA-10. The tool session itself does not retry a lookup. Provider retries belong to the investigation loop below.
+
+## Investigation loop (QA-09)
+
+`runInvestigation` is the one runtime actor loop. It takes a `runId`, an optional `orderId`, a `ReadOnlyToolSession`, and one provider. The user text is fixed. A caller cannot pass a free-form prompt. The system prompt says tool output is untrusted data, a UI confirmation is not proof an order was saved, and a 404 is not a 503 or a timeout. The loop does not emit `ALLOW`, `BLOCK`, or `HOLD`.
+
+Two providers exist. `createScriptedProvider` replays turns supplied by the test. Its `resultOrigin` is `scripted-mock`. That report is not a live model result, even when the configured model name looks like a vendor model. `createOpenAiCompatibleProvider` posts to `{baseUrl}/chat/completions`. `https` URLs are accepted. Plain `http` is accepted only for `127.0.0.1`, `localhost`, and `::1`. A URL with a user, a password, a query, or a hash is rejected. The API key is sent only in the `authorization` header. It is not written into the report. An injected transport is `fixture-transport`. The default `fetch` transport is `resultOrigin: 'network'`. On a provider returned by that factory, `network` means that transport ran. The loop checks the label and origin pair on the object it receives. It does not carry a separate unforgeable mark, so a caller-built object can claim `network`. That field is not a score from a vendor and it is not a gate. In Node, `new URL('http://[::1]/').hostname` is `[::1]`. The loopback check compares that value with `::1`, so bracketed IPv6 loopback is rejected. That rejection stays fail-closed until a human approves a matcher change.
+
+The loop asks the provider, then either stops on a final note or calls the tool session once. If a response contains several tool calls, only the first is used. A denied name is returned to the model as data and is not executed. The loop keeps going after `DENIED` so the model receives that result. It does not treat denial as a stop reason. `maxRetries` is 0–2 and defaults to 1. A timeout, a transport error, HTTP 408/429/500/502/503/504, and a malformed completion are retried. Those retries start immediately. There is no backoff. HTTP 401, 403, and 404 are not. A provider HTTP status stays on `providerHttpStatus`. It is not an order lookup. The note for provider HTTP 404 says no order absence was inferred.
+
+`timeoutMs` bounds each provider attempt, from 1 to 10000, default 2000. The loop applies that bound itself. A provider that ignores `AbortSignal` still ends the attempt as `provider_timeout`. The tool session keeps its own lookup timeout. A provider timeout is `PROVIDER_UNAVAILABLE` / `provider_timeout` and does not say the order is missing. After the tool budget returns `LIMIT`, the loop stops with `BUDGET_EXHAUSTED` and does not ask the model again. Token totals stay null unless every counted model response reported non-negative integers. The package does not compute a price.
+
+`readOpenAiCompatibleSettings` reads `LLM_PROVIDER`, `LLM_BASE_URL`, `LLM_MODEL`, and `LLM_API_KEY`. It returns `configured: false` unless the provider value is exactly `openai-compatible` and the other three are present. It does not call the network. The loop does not read the environment by itself. `.env.example` still has empty placeholders.
+
+The report field `orderClassified` is always false. `gateDecision` is always null. `untrustedFinalText` is the model's note, redacted and wrapped as untrusted text. A secret-shaped model string is redacted before it is stored. Parsing that note into claims and evidence ids is QA-10. This loop does not decide whether a ghost checkout failed.
 
 ## Explicitly absent
 
-The LLM provider, the actor loop, the independent validator package, the quality gate, the golden dataset, authentication, payments, and deployment. The read-only tool session is present and is not that agent. The storefront still has no scenario control and does not call `GET /api/orders/:orderId`. A ghost confirmation can appear on that page; the page still does not decide whether the order was saved.
+The diagnosis schema and claim checks, the independent validator package, the quality gate, the golden dataset, authentication, payments, and deployment. The investigation report is not that diagnosis and not that gate. The storefront still has no scenario control and does not call `GET /api/orders/:orderId`. A ghost confirmation can appear on that page; the page still does not decide whether the order was saved.
 
 ## Playwright (QA-06)
 
