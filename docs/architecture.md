@@ -117,13 +117,13 @@ The evidence collector, the runtime agent, the independent validator package, th
 
 ## Playwright (QA-06)
 
-`tests/e2e` starts the built API on `127.0.0.1:3011` with a temporary SQLite file and a generated harness token, then starts `vite preview` on `127.0.0.1:4174` with `TQA_API_ORIGIN` pointed at that API. The browser never receives the token. Scenario setup uses `POST /harness/runs/:runId/scenario` from Playwright's API client.
+`tests/e2e` starts the built API on `127.0.0.1:3011` with a temporary SQLite file and a generated harness token, then starts `vite preview` on `127.0.0.1:4174` with `TQA_API_ORIGIN` pointed at that API. Teardown deletes that SQLite directory only when it is `<tmpdir>/tqa-qa06-<pid>`. The browser never receives the token. Scenario setup uses `POST /harness/runs/:runId/scenario` from Playwright's API client.
 
 The limited UI tests assert the confirmation heading and the text `Order confirmed` for `NORMAL`, `GHOST_SUCCESS`, and `VERIFICATION_UNAVAILABLE`. They do not call `GET /api/orders/:orderId`. Their JSON evidence sets `oracle.assertion` to `NOT_CONSULTED`.
 
 The NORMAL oracle requires 200 `FOUND`, the same `runId`, and the catalog total for one mug. The unavailable test requires 503 `UNAVAILABLE` / `service_unavailable` and records `UNKNOWN`. It asserts the status is not 404. The ghost oracle uses the same 200 persistence expectation as NORMAL. On `GHOST_SUCCESS` that expectation fails, the evidence records 404 `ABSENT` / `DEFECT`, and the Playwright project `expected-negative` exits non-zero. `pnpm test` and `pnpm test:e2e` do not include that project.
 
-Five consecutive NORMAL browser checkouts in `repeatability.spec.ts` keep distinct `runId` and `orderId` values, confirm each row, and reset each run twice. Traces and screenshots are kept for passing tests only when `TQA_E2E_DEMO=1`. Ordinary regression retains traces on failure. JSON files under `test-results/evidence/` are the run correlation records. They are not `EvidenceRecord` collector output; that package is still QA-07. They are not a gate decision.
+Five consecutive NORMAL browser checkouts in `repeatability.spec.ts` keep distinct `runId` and `orderId` values, confirm each row, and reset each run twice. Traces, screenshots, and `playwright-report.json` are written under the repository `test-results/` directory. Traces and screenshots are kept for passing tests only when `TQA_E2E_DEMO=1`. Ordinary regression retains traces on failure. JSON files under `test-results/evidence/` are the run correlation records. They are not `EvidenceRecord` collector output; that package is still QA-07. They are not a gate decision.
 
 ## Storefront shell (QA-03) and commerce UI (QA-04)
 

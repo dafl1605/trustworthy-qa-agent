@@ -1,7 +1,10 @@
+import { resolve } from 'node:path';
 import { defineConfig } from '@playwright/test';
 import { WEB_ORIGIN } from './endpoints.ts';
 
 const demo = process.env.TQA_E2E_DEMO === '1';
+const repoRoot = resolve(import.meta.dirname, '../..');
+const resultsDir = resolve(repoRoot, 'test-results');
 
 export default defineConfig({
   testDir: '.',
@@ -15,9 +18,9 @@ export default defineConfig({
   fullyParallel: false,
   reporter: [
     ['list'],
-    ['json', { outputFile: 'test-results/playwright-report.json' }],
+    ['json', { outputFile: resolve(resultsDir, 'playwright-report.json') }],
   ],
-  outputDir: 'test-results/output',
+  outputDir: resolve(resultsDir, 'output'),
   use: {
     baseURL: WEB_ORIGIN,
     trace: demo ? 'on' : 'retain-on-failure',
