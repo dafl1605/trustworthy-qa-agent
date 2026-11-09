@@ -10,11 +10,15 @@
   },
   "scripts": {
     "build": "pnpm --filter @tqa/shared build && pnpm --filter @tqa/api build && pnpm --filter @tqa/storefront build",
-    "typecheck": "pnpm --filter @tqa/shared build && pnpm --filter @tqa/api build && pnpm --filter @tqa/storefront typecheck && tsc -p tests/tsconfig.json --noEmit",
-    "test": "pnpm run build && tsc -p tests/tsconfig.json --noEmit && node --experimental-strip-types --test tests/contract/*.test.ts",
+    "typecheck": "pnpm --filter @tqa/shared build && pnpm --filter @tqa/api build && pnpm --filter @tqa/storefront typecheck && tsc -p tests/tsconfig.json --noEmit && tsc -p tests/e2e/tsconfig.json --noEmit",
+    "test": "pnpm run build && tsc -p tests/tsconfig.json --noEmit && node --experimental-strip-types --test tests/contract/*.test.ts tests/e2e/*.test.ts",
+    "test:e2e": "pnpm run build && playwright test -c tests/e2e/playwright.config.ts --project=regression",
+    "test:e2e:ghost-oracle": "pnpm run build && playwright test -c tests/e2e/playwright.config.ts --project=expected-negative",
+    "demo:false-pass": "pnpm run build && node --experimental-strip-types tests/e2e/demo-false-pass.ts",
     "db:migrate": "pnpm --filter @tqa/api db:migrate"
   },
   "devDependencies": {
+    "@playwright/test": "1.65.0",
     "@tqa/api": "workspace:*",
     "@tqa/shared": "workspace:*",
     "@types/node": "catalog:",
