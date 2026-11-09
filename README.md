@@ -17,7 +17,7 @@ After **QA-04**, those sections list the local catalog, keep a cart of up to 3 p
 
 After **QA-05**, the API can run `NORMAL`, `GHOST_SUCCESS`, and `VERIFICATION_UNAVAILABLE` for one `runId`. The control routes stay off unless `TQA_HARNESS=1` and `TQA_HARNESS_TOKEN` is set. They require a loopback caller and header `x-tqa-harness-token`. The storefront has no scenario switch. A ghost checkout still returns `Order confirmed` and writes no `orders` row. An unavailable run still returns 503 on the order read, which is not a 404.
 
-After **QA-06**, Playwright can drive the storefront. `pnpm test:e2e` passes a limited confirmation check for `GHOST_SUCCESS` without reading the order. `pnpm test:e2e:ghost-oracle` keeps the persistence assertion and is expected to fail that case with 404 `ABSENT`. `pnpm demo:false-pass` records five of those failures. See [`tests/e2e/README.md`](tests/e2e/README.md).
+After **QA-06**, Playwright can drive the storefront. `pnpm test:e2e` passes a limited confirmation check for `GHOST_SUCCESS` without reading the order, and it runs a separate control that the injected ghost order is still 404 `ABSENT`. That control is not a persistence pass. `pnpm test:e2e:ghost-oracle` keeps the persistence assertion and is expected to fail that case with 404 `ABSENT`. `pnpm demo:false-pass` records five of those failures. See [`tests/e2e/README.md`](tests/e2e/README.md).
 
 ## Requirements
 

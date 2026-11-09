@@ -29,7 +29,7 @@ Supported commands from the repository root:
 | `pnpm typecheck` | Build shared and API declarations, typecheck the storefront, `tests/contract`, and `tests/e2e` |
 | `pnpm build` | `tsc` for shared and API, Vite production build for the storefront |
 | `pnpm test` | Build, typecheck contract tests, run them with `node:test`. This does not run Playwright |
-| `pnpm test:e2e` | Build, then the Playwright regression project. The ghost UI case in this project does not check persistence |
+| `pnpm test:e2e` | Build, then the Playwright regression project. The ghost UI case does not check persistence. A separate characterization test expects the injected ghost order to stay absent |
 | `pnpm test:e2e:ghost-oracle` | Build, then the persistence oracle on `GHOST_SUCCESS`. A non-zero exit is the expected negative result |
 | `pnpm demo:false-pass` | Replays the limited ghost UI and five failing oracle lookups. Exit 0 means the false PASS was reproduced |
 | `pnpm db:migrate` | Apply `apps/api/db/schema.sql` to `DATABASE_PATH` or `./data/demo.sqlite` |
@@ -121,7 +121,7 @@ The evidence collector, the runtime agent, the independent validator package, th
 
 The limited UI tests assert the confirmation heading and the text `Order confirmed` for `NORMAL`, `GHOST_SUCCESS`, and `VERIFICATION_UNAVAILABLE`. They do not call `GET /api/orders/:orderId`. Their JSON evidence sets `oracle.assertion` to `NOT_CONSULTED`.
 
-The NORMAL oracle requires 200 `FOUND`, the same `runId`, and the catalog total for one mug. The unavailable test requires 503 `UNAVAILABLE` / `service_unavailable` and records `UNKNOWN`. It asserts the status is not 404. The ghost oracle uses the same 200 persistence expectation as NORMAL. On `GHOST_SUCCESS` that expectation fails, the evidence records 404 `ABSENT` / `DEFECT`, and the Playwright project `expected-negative` exits non-zero. `pnpm test` and `pnpm test:e2e` do not include that project.
+The NORMAL oracle requires 200 `FOUND`, the same `runId`, and the catalog total for one mug. The unavailable test requires 503 `UNAVAILABLE` / `service_unavailable` and records `UNKNOWN`. It asserts the status is not 404. The ghost oracle uses the same 200 persistence expectation as NORMAL. On `GHOST_SUCCESS` that expectation fails, the evidence records 404 `ABSENT` / `DEFECT`, and the Playwright project `expected-negative` exits non-zero. `pnpm test` and `pnpm test:e2e` do not include that project. `pnpm test:e2e` does include `fault-ghost-characterization.spec.ts`, which expects 404 `ABSENT` as a control that the injected absence is still there. A green result on that control is not the oracle passing.
 
 Five consecutive NORMAL browser checkouts in `repeatability.spec.ts` keep distinct `runId` and `orderId` values, confirm each row, and reset each run twice. Traces, screenshots, and `playwright-report.json` are written under the repository `test-results/` directory. Traces and screenshots are kept for passing tests only when `TQA_E2E_DEMO=1`. Ordinary regression retains traces on failure. JSON files under `test-results/evidence/` are the run correlation records. They are not `EvidenceRecord` collector output; that package is still QA-07. They are not a gate decision.
 

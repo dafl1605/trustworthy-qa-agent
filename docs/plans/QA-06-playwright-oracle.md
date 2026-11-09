@@ -70,3 +70,9 @@ Status: ACCEPTED for implementation. The scenario meanings stay the ones already
 ## Review remediation — comment 6751362980
 
 Reviewed head `45545645e2955357229ad5521797a50376e6291b`. F-02 documents the Chromium install. Teardown deletes only `<tmpdir>/tqa-qa06-<pid>`. Playwright traces and the JSON report resolve under the repository `test-results/` directory. The `onlyBuiltDependencies` formatting matches `main`. F-01 / D1 is not implemented: a characterization test that expects 404 inside `pnpm test:e2e` still needs the human sentence "Approved D1: add a ghost characterization test in the regression project". Ports 3011 and 4174 stay as documented. The ghost oracle assertion is unchanged. Status remains IN_REVIEW. Not DONE.
+
+## Review remediation — comments 6751623835 and 6751673626
+
+Re-review comment `6751623835` (Claude Code, 2026-11-09T21:13:56Z) looked at head `d44144fab9a6ae1267437881c77bb985be35504a`. It confirmed F-02 and F-04, left fixed ports deferred, and added optional F-05: `harness-paths.test.ts` reads the JSON reporter by index. F-05 stays deferred. It does not change an assertion.
+
+Human comment `6751673626` (dafl1605, 2026-11-09T21:16:15Z) is only the sentence `Approved D1: add a ghost characterization test in the regression project`. That sentence is outside a generated review, so option B is approved. The earlier rejection still stands for `oracle-ghost.spec.ts`: that file keeps the HTTP 200 expectation and stays in `expected-negative`. The approved control is a separate regression file, `tests/e2e/fault-ghost-characterization.spec.ts`. A pass there means the injected absence is still present. It is not a persistence pass and it is not tagged `@expected-negative`. Fault semantics, gates, and the 54 h + 9 h baseline are unchanged. Status remains IN_REVIEW. Not DONE. Command results are in `docs/progress/2026-11-09.md`.

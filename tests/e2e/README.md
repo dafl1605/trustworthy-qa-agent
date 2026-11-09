@@ -16,6 +16,8 @@ Without that browser, `pnpm test:e2e` fails with `Executable doesn't exist`. Ins
 
 `pnpm test:e2e` runs the regression project. It includes a limited UI test that passes for every scenario, including `GHOST_SUCCESS`. That pass does not read `GET /api/orders/:orderId`. A green regression run is not proof that an order was saved.
 
+The same project runs `fault-ghost-characterization.spec.ts`. That test places one `GHOST_SUCCESS` order and expects HTTP 404 `ABSENT`. A pass means the injected defect is still present. It is not tagged `@expected-negative` and it does not replace `oracle-ghost.spec.ts`.
+
 The same command also runs:
 
 - an independent oracle for `NORMAL`, which requires HTTP 200 `FOUND` and the server total
