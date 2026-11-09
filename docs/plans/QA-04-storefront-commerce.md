@@ -23,6 +23,7 @@ Replace the storefront scaffold with a local catalog, cart, checkout, and confir
   - `docs/progress/2026-11-01.md`
   - `README.md`
 - Explicitly not change: shared Zod contracts, SQLite schema, fault modes, harness routes, sprint-plan hours, skills, gate policy, speaker draft
+- D-01 (PR #6 comment 6563225601): option A applied — `packages/shared/src/contracts.ts` fixture descriptions restored to `main`. No shared-contract exception remains in this PR.
 
 ## Dependencies and design alternatives
 - Prerequisites: QA-02 checkout API and QA-03 section shell are merged. No open implementation PR.
