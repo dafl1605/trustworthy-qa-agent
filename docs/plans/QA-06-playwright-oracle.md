@@ -66,3 +66,7 @@ Status: ACCEPTED for implementation. The scenario meanings stay the ones already
 - `pnpm demo:false-pass` exited 0 after the oracle Playwright process exited 1 on five 404 `ABSENT` lookups
 - Actual elapsed hours: unknown
 - Status: IN_REVIEW once the PR is open. Not DONE
+
+## Review remediation — comment 6751362980
+
+Reviewed head `45545645e2955357229ad5521797a50376e6291b`. F-02 documents the Chromium install. Teardown deletes only `<tmpdir>/tqa-qa06-<pid>`. Playwright traces and the JSON report resolve under the repository `test-results/` directory. The `onlyBuiltDependencies` formatting matches `main`. F-01 / D1 is not implemented: a characterization test that expects 404 inside `pnpm test:e2e` still needs the human sentence "Approved D1: add a ghost characterization test in the regression project". Ports 3011 and 4174 stay as documented. The ghost oracle assertion is unchanged. Status remains IN_REVIEW. Not DONE.
