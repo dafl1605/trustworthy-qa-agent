@@ -1,4 +1,4 @@
-# Architecture — QA-01 scaffold, QA-02 checkout API, QA-03 storefront shell, QA-04 commerce UI, QA-05 fault harness, QA-06 Playwright oracle
+# Architecture — QA-01 scaffold, QA-02 checkout API, QA-03 storefront shell, QA-04 commerce UI, QA-05 fault harness, QA-06 Playwright oracle, QA-07 evidence collector
 
 This note is the as-built skeleton. Observable product behavior still lives in `docs/spec.md`. Domain names live in `docs/architecture-contracts.md`. Foundation choices live in `docs/adr/0001-runtime-foundations.md`.
 
@@ -11,23 +11,24 @@ Requires Node.js `>=22.13.0` (this VM: `22.23.4`) and pnpm `10.33.4`. `runId` an
 | `apps/storefront` | React + Vite catalog, cart, checkout, and confirmation. The page calls `GET /api/products` and `POST /api/checkout` through the Vite `/api` proxy. It does not call `GET /api/orders/:orderId` |
 | `apps/api` | Loopback Node.js server. `GET /health`, fixture catalog, checkout, order lookup, and the local fault harness. Schema apply lives on `@tqa/api/migrate`. The independent order read lives on `@tqa/api/verify`. Neither is exported from the package root |
 | `packages/shared` | Zod schemas and inferred types for the MVP contracts, including deferred `VerificationResult` and `EvalCase` |
+| `packages/evidence-collector` | In-memory `EvidenceRecord` index. Correlates `runId` and `orderId`. Does not open SQLite and does not decide a gate |
 | `tests/contract` | Schema, migration, health, checkout persistence, order lookup, config, and log checks |
 | `tests/e2e` | Playwright UI coverage, independent order oracle, and JSON evidence (QA-06) |
 | `tests/evals` | Reserved for the eval runner (QA-14). Empty |
 | `fixtures/golden-dataset` | Reserved for 12 labeled cases (QA-13). Empty |
 
-Later packages from the contract doc are not created yet: `evidence-collector`, `qa-agent`, `validators`, and `quality-gate`.
+Later packages from the contract doc are not created yet: `qa-agent`, `validators`, and `quality-gate`. `@tqa/evidence-collector` is the QA-07 package.
 
 ## Workspace
 
-pnpm workspaces (`pnpm-workspace.yaml`). Package names: `@tqa/storefront`, `@tqa/api`, `@tqa/shared`. TypeScript strict settings, including `noUncheckedIndexedAccess`, live in `tsconfig.base.json`. `@tqa/api` depends on `@tqa/shared`. The storefront does not, so the UI bundle does not pull Zod in before it has a UI contract to use.
+pnpm workspaces (`pnpm-workspace.yaml`). Package names: `@tqa/storefront`, `@tqa/api`, `@tqa/shared`, `@tqa/evidence-collector`. TypeScript strict settings, including `noUncheckedIndexedAccess`, live in `tsconfig.base.json`. `@tqa/api` and `@tqa/evidence-collector` depend on `@tqa/shared`. The storefront does not, so the UI bundle does not pull Zod in before it has a UI contract to use.
 
 Supported commands from the repository root:
 
 | Command | Effect |
 |---|---|
-| `pnpm typecheck` | Build shared and API declarations, typecheck the storefront, `tests/contract`, and `tests/e2e` |
-| `pnpm build` | `tsc` for shared and API, Vite production build for the storefront |
+| `pnpm typecheck` | Build shared, evidence collector, and API declarations, typecheck the storefront, `tests/contract`, and `tests/e2e` |
+| `pnpm build` | `tsc` for shared, evidence collector, and API, Vite production build for the storefront |
 | `pnpm test` | Build, typecheck contract tests, run them with `node:test`. This does not run Playwright |
 | `pnpm test:e2e` | Build, then the Playwright regression project. The ghost UI case does not check persistence. A separate characterization test expects the injected ghost order to stay absent |
 | `pnpm test:e2e:ghost-oracle` | Build, then the persistence oracle on `GHOST_SUCCESS`. A non-zero exit is the expected negative result |
@@ -111,9 +112,21 @@ Harness tables are created only when the harness is mounted. They are not part o
 
 Direct SQL is a test inspection of the business tables. It is not the authoritative verification path.
 
+## Evidence collector (QA-07)
+
+`@tqa/evidence-collector` keeps an in-memory index of `EvidenceRecord` values from `@tqa/shared`. The shared record still has `evidenceId`, `runId`, `source`, `observedAt`, `kind`, `summary`, and an optional `artifactUri`. It does not grow an `orderId` field. The order link lives beside the record: `correlationForOrder(orderId)` returns the `runId` and the evidence ids observed for that order. One `orderId` cannot be linked to two `runId` values. One `runId` can still have more than one order, which matches the API.
+
+The collector does not open SQLite, spawn a shell, or return `ALLOW`, `BLOCK`, or `HOLD`. A caller can pass a checkout confirmation, an `OrderLookupResult`, a supplied `orders` row count of 0 or 1, a log line, an artifact path, or the JSON object written by `tests/e2e/evidence.ts`. `ingestCheckoutEvidenceJson` parses that text and does not execute it. Summaries are capped at 280 characters. A trace or screenshot is stored as `artifactUri` plus a short summary. The file body is not copied. Log text is prefixed as untrusted data. `TQA_HARNESS_TOKEN`, `x-tqa-harness-token`, and bearer values are replaced with `[redacted]`.
+
+A UI confirmation summary says the screen is not proof the order was saved. A clean 404 artifact becomes `order-lookup-absent` and does not mention 503. A clean 503 artifact becomes `order-lookup-unavailable` and does not mention 404. A direct `recordOrderLookup` of reason `timeout` keeps that reason. If the artifact's HTTP status, code, and file label disagree, the API record kind is `order-lookup-inconsistent`. The original free-text `summary` on the QA-06 file is not copied, so an instruction hidden there does not become the record. A limited UI file with `consulted: false` produces only the UI record and says the order lookup was not consulted.
+
+`citation([])` is `UNVERIFIED`. `citation` of an id that is not in the index is `UNKNOWN_IDS` and does not invent a record. `RESOLVED` means every cited id exists. It does not mean the claim text is true, and it does not authorize a gate `ALLOW`. Repeating the same checkout artifact returns the existing records.
+
+Playwright still writes `test-results/evidence/*.json` itself. QA-08 is the next task and is not this package.
+
 ## Explicitly absent
 
-The evidence collector, the runtime agent, the independent validator package, the quality gate, the golden dataset, authentication, payments, and deployment. The storefront still has no scenario control and does not call `GET /api/orders/:orderId`. A ghost confirmation can appear on that page; the page still does not decide whether the order was saved.
+The runtime agent, the independent validator package, the quality gate, the golden dataset, authentication, payments, and deployment. The storefront still has no scenario control and does not call `GET /api/orders/:orderId`. A ghost confirmation can appear on that page; the page still does not decide whether the order was saved.
 
 ## Playwright (QA-06)
 
@@ -123,7 +136,7 @@ The limited UI tests assert the confirmation heading and the text `Order confirm
 
 The NORMAL oracle requires 200 `FOUND`, the same `runId`, and the catalog total for one mug. The unavailable test requires 503 `UNAVAILABLE` / `service_unavailable` and records `UNKNOWN`. It asserts the status is not 404. The ghost oracle uses the same 200 persistence expectation as NORMAL. On `GHOST_SUCCESS` that expectation fails, the evidence records 404 `ABSENT` / `DEFECT`, and the Playwright project `expected-negative` exits non-zero. `pnpm test` and `pnpm test:e2e` do not include that project. `pnpm test:e2e` does include `fault-ghost-characterization.spec.ts`, which expects 404 `ABSENT` as a control that the injected absence is still there. A green result on that control is not the oracle passing.
 
-Five consecutive NORMAL browser checkouts in `repeatability.spec.ts` keep distinct `runId` and `orderId` values, confirm each row, and reset each run twice. Traces, screenshots, and `playwright-report.json` are written under the repository `test-results/` directory. Traces and screenshots are kept for passing tests only when `TQA_E2E_DEMO=1`. Ordinary regression retains traces on failure. JSON files under `test-results/evidence/` are the run correlation records. They are not `EvidenceRecord` collector output; that package is still QA-07. They are not a gate decision.
+Five consecutive NORMAL browser checkouts in `repeatability.spec.ts` keep distinct `runId` and `orderId` values, confirm each row, and reset each run twice. Traces, screenshots, and `playwright-report.json` are written under the repository `test-results/` directory. Traces and screenshots are kept for passing tests only when `TQA_E2E_DEMO=1`. Ordinary regression retains traces on failure. JSON files under `test-results/evidence/` are still written by the QA-06 helper. They are not produced by `@tqa/evidence-collector`, and they are not a gate decision. The collector can normalize that JSON shape when a caller passes it in. Playwright is not wired to the package.
 
 ## Storefront shell (QA-03) and commerce UI (QA-04)
 
