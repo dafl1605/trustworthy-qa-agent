@@ -13,7 +13,9 @@ After **QA-02**, the API serves `GET /api/products`, `POST /api/checkout`, and `
 
 After **QA-03**, the storefront has an accessible shell with Catalog, Cart, Checkout, and Confirmation sections. A draft meetup abstract, agenda, and bio checklist lives in [`docs/speaker/2026-11-25-browserstack-draft.md`](docs/speaker/2026-11-25-browserstack-draft.md). It has not been sent.
 
-After **QA-04**, those sections list the local catalog, keep a cart of up to 3 products, and submit `POST /api/checkout`. The confirmation shows the checkout response. It does not call `GET /api/orders/:orderId`, and the page says that message is not proof the order was saved. Fault modes remain QA-05.
+After **QA-04**, those sections list the local catalog, keep a cart of up to 3 products, and submit `POST /api/checkout`. The confirmation shows the checkout response. It does not call `GET /api/orders/:orderId`, and the page says that message is not proof the order was saved.
+
+After **QA-05**, the API can run `NORMAL`, `GHOST_SUCCESS`, and `VERIFICATION_UNAVAILABLE` for one `runId`. The control routes stay off unless `TQA_HARNESS=1` and `TQA_HARNESS_TOKEN` is set. They require a loopback caller and header `x-tqa-harness-token`. The storefront has no scenario switch. A ghost checkout still returns `Order confirmed` and writes no `orders` row. An unavailable run still returns 503 on the order read, which is not a 404.
 
 ## Requirements
 
