@@ -62,6 +62,26 @@ function makePlan({ files, conclusion, existingLabels = [], autoCloudFix = false
 
 async function resolvePullRequest({ github, context, core }) {
   const { owner, repo } = context.repo;
+  // Handle pull_request_target events
+  if (context.eventName === 'pull_request_target') {
+    const number = context.payload.pull_request?.number;
+
+    if (!Number.isInteger(number)) {
+      throw new Error('Missing Pull Request number');
+    }
+
+    const { data: pr } = await github.rest.pulls.get({
+      owner,
+      repo,
+      pull_number: number
+    });
+
+    return {
+      pr,
+      conclusion: 'unknown'
+    };
+  }
+  // Handle workflow_dispatch events
   if (context.eventName === 'workflow_dispatch') {
     const str = String(context.payload.inputs?.pr_number || '');
     if (!/^[1-9][0-9]*$/.test(str)) throw new Error('Invalid PR number');
