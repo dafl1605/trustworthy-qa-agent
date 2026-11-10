@@ -1,5 +1,5 @@
 {
-  "baselineVersion": "tqa-regression-baseline-1",
+  "baselineVersion": "tqa-regression-baseline-2",
   "source": "supplied-observations",
   "playwrightInvokedByModule": false,
   "functionalFreeze": true,
@@ -15,18 +15,18 @@
       0
     ],
     "startedAt": [
-      "2026-11-10T01:15:33.033Z",
-      "2026-11-10T01:16:22.920Z",
-      "2026-11-10T01:16:44.844Z",
-      "2026-11-10T01:17:07.688Z",
-      "2026-11-10T01:17:29.582Z"
+      "2026-11-10T22:18:06.541Z",
+      "2026-11-10T22:18:28.186Z",
+      "2026-11-10T22:18:49.472Z",
+      "2026-11-10T22:19:10.688Z",
+      "2026-11-10T22:19:31.839Z"
     ],
     "durationMs": [
-      15924.874,
-      15429.495,
-      15438.628,
-      15397.251,
-      15394.755
+      15634.659,
+      15214.347,
+      15109.109,
+      15102.706,
+      15000.168000000001
     ],
     "tests": [
       {
@@ -91,18 +91,18 @@
       1
     ],
     "startedAt": [
-      "2026-11-10T01:17:51.507Z",
-      "2026-11-10T01:18:11.386Z",
-      "2026-11-10T01:18:30.890Z",
-      "2026-11-10T01:18:50.754Z",
-      "2026-11-10T01:19:10.534Z"
+      "2026-11-10T22:19:52.568Z",
+      "2026-11-10T22:20:10.661Z",
+      "2026-11-10T22:20:28.839Z",
+      "2026-11-10T22:20:47.549Z",
+      "2026-11-10T22:21:05.854Z"
     ],
     "durationMs": [
-      12090.644,
-      12182.699,
-      12146.157,
-      12137.419,
-      12346.464
+      11993.512999999999,
+      11939.140000000001,
+      12437.778,
+      11983.484,
+      11938.978000000001
     ],
     "file": "oracle-ghost.spec.ts",
     "title": "independent oracle requires a persisted order @expected-negative",
@@ -110,8 +110,426 @@
     "observedStatus": "failed",
     "playwrightStatus": "unexpected",
     "classification": "EXPECTED_NEGATIVE_ABSENT_ORDER",
+    "observedLookupStatuses": [
+      404,
+      404,
+      404,
+      404,
+      404
+    ],
     "passedRuns": 0,
     "failedRuns": 5
+  },
+  "observations": {
+    "regression": [
+      {
+        "command": "pnpm test:e2e",
+        "exitCode": 0,
+        "startedAt": "2026-11-10T22:18:06.541Z",
+        "durationMs": 15634.659,
+        "tests": [
+          {
+            "file": "fault-ghost-characterization.spec.ts",
+            "title": "control: injected GHOST_SUCCESS is still absent from the order read",
+            "projectName": "regression",
+            "status": "expected",
+            "expectedStatus": "passed",
+            "observedStatus": "passed"
+          },
+          {
+            "file": "oracle-normal.spec.ts",
+            "title": "independent oracle confirms a NORMAL order and its server total",
+            "projectName": "regression",
+            "status": "expected",
+            "expectedStatus": "passed",
+            "observedStatus": "passed"
+          },
+          {
+            "file": "oracle-unavailable.spec.ts",
+            "title": "unavailable verification stays 503 UNKNOWN and is not a 404 defect",
+            "projectName": "regression",
+            "status": "expected",
+            "expectedStatus": "passed",
+            "observedStatus": "passed"
+          },
+          {
+            "file": "repeatability.spec.ts",
+            "title": "five consecutive NORMAL checkouts use distinct ids and each order is stored",
+            "projectName": "regression",
+            "status": "expected",
+            "expectedStatus": "passed",
+            "observedStatus": "passed"
+          },
+          {
+            "file": "superficial-ui.spec.ts",
+            "title": "limited UI coverage records confirmation only for NORMAL",
+            "projectName": "regression",
+            "status": "expected",
+            "expectedStatus": "passed",
+            "observedStatus": "passed"
+          },
+          {
+            "file": "superficial-ui.spec.ts",
+            "title": "limited UI coverage records confirmation only for GHOST_SUCCESS",
+            "projectName": "regression",
+            "status": "expected",
+            "expectedStatus": "passed",
+            "observedStatus": "passed"
+          },
+          {
+            "file": "superficial-ui.spec.ts",
+            "title": "limited UI coverage records confirmation only for VERIFICATION_UNAVAILABLE",
+            "projectName": "regression",
+            "status": "expected",
+            "expectedStatus": "passed",
+            "observedStatus": "passed"
+          }
+        ]
+      },
+      {
+        "command": "pnpm test:e2e",
+        "exitCode": 0,
+        "startedAt": "2026-11-10T22:18:28.186Z",
+        "durationMs": 15214.347,
+        "tests": [
+          {
+            "file": "fault-ghost-characterization.spec.ts",
+            "title": "control: injected GHOST_SUCCESS is still absent from the order read",
+            "projectName": "regression",
+            "status": "expected",
+            "expectedStatus": "passed",
+            "observedStatus": "passed"
+          },
+          {
+            "file": "oracle-normal.spec.ts",
+            "title": "independent oracle confirms a NORMAL order and its server total",
+            "projectName": "regression",
+            "status": "expected",
+            "expectedStatus": "passed",
+            "observedStatus": "passed"
+          },
+          {
+            "file": "oracle-unavailable.spec.ts",
+            "title": "unavailable verification stays 503 UNKNOWN and is not a 404 defect",
+            "projectName": "regression",
+            "status": "expected",
+            "expectedStatus": "passed",
+            "observedStatus": "passed"
+          },
+          {
+            "file": "repeatability.spec.ts",
+            "title": "five consecutive NORMAL checkouts use distinct ids and each order is stored",
+            "projectName": "regression",
+            "status": "expected",
+            "expectedStatus": "passed",
+            "observedStatus": "passed"
+          },
+          {
+            "file": "superficial-ui.spec.ts",
+            "title": "limited UI coverage records confirmation only for NORMAL",
+            "projectName": "regression",
+            "status": "expected",
+            "expectedStatus": "passed",
+            "observedStatus": "passed"
+          },
+          {
+            "file": "superficial-ui.spec.ts",
+            "title": "limited UI coverage records confirmation only for GHOST_SUCCESS",
+            "projectName": "regression",
+            "status": "expected",
+            "expectedStatus": "passed",
+            "observedStatus": "passed"
+          },
+          {
+            "file": "superficial-ui.spec.ts",
+            "title": "limited UI coverage records confirmation only for VERIFICATION_UNAVAILABLE",
+            "projectName": "regression",
+            "status": "expected",
+            "expectedStatus": "passed",
+            "observedStatus": "passed"
+          }
+        ]
+      },
+      {
+        "command": "pnpm test:e2e",
+        "exitCode": 0,
+        "startedAt": "2026-11-10T22:18:49.472Z",
+        "durationMs": 15109.109,
+        "tests": [
+          {
+            "file": "fault-ghost-characterization.spec.ts",
+            "title": "control: injected GHOST_SUCCESS is still absent from the order read",
+            "projectName": "regression",
+            "status": "expected",
+            "expectedStatus": "passed",
+            "observedStatus": "passed"
+          },
+          {
+            "file": "oracle-normal.spec.ts",
+            "title": "independent oracle confirms a NORMAL order and its server total",
+            "projectName": "regression",
+            "status": "expected",
+            "expectedStatus": "passed",
+            "observedStatus": "passed"
+          },
+          {
+            "file": "oracle-unavailable.spec.ts",
+            "title": "unavailable verification stays 503 UNKNOWN and is not a 404 defect",
+            "projectName": "regression",
+            "status": "expected",
+            "expectedStatus": "passed",
+            "observedStatus": "passed"
+          },
+          {
+            "file": "repeatability.spec.ts",
+            "title": "five consecutive NORMAL checkouts use distinct ids and each order is stored",
+            "projectName": "regression",
+            "status": "expected",
+            "expectedStatus": "passed",
+            "observedStatus": "passed"
+          },
+          {
+            "file": "superficial-ui.spec.ts",
+            "title": "limited UI coverage records confirmation only for NORMAL",
+            "projectName": "regression",
+            "status": "expected",
+            "expectedStatus": "passed",
+            "observedStatus": "passed"
+          },
+          {
+            "file": "superficial-ui.spec.ts",
+            "title": "limited UI coverage records confirmation only for GHOST_SUCCESS",
+            "projectName": "regression",
+            "status": "expected",
+            "expectedStatus": "passed",
+            "observedStatus": "passed"
+          },
+          {
+            "file": "superficial-ui.spec.ts",
+            "title": "limited UI coverage records confirmation only for VERIFICATION_UNAVAILABLE",
+            "projectName": "regression",
+            "status": "expected",
+            "expectedStatus": "passed",
+            "observedStatus": "passed"
+          }
+        ]
+      },
+      {
+        "command": "pnpm test:e2e",
+        "exitCode": 0,
+        "startedAt": "2026-11-10T22:19:10.688Z",
+        "durationMs": 15102.706,
+        "tests": [
+          {
+            "file": "fault-ghost-characterization.spec.ts",
+            "title": "control: injected GHOST_SUCCESS is still absent from the order read",
+            "projectName": "regression",
+            "status": "expected",
+            "expectedStatus": "passed",
+            "observedStatus": "passed"
+          },
+          {
+            "file": "oracle-normal.spec.ts",
+            "title": "independent oracle confirms a NORMAL order and its server total",
+            "projectName": "regression",
+            "status": "expected",
+            "expectedStatus": "passed",
+            "observedStatus": "passed"
+          },
+          {
+            "file": "oracle-unavailable.spec.ts",
+            "title": "unavailable verification stays 503 UNKNOWN and is not a 404 defect",
+            "projectName": "regression",
+            "status": "expected",
+            "expectedStatus": "passed",
+            "observedStatus": "passed"
+          },
+          {
+            "file": "repeatability.spec.ts",
+            "title": "five consecutive NORMAL checkouts use distinct ids and each order is stored",
+            "projectName": "regression",
+            "status": "expected",
+            "expectedStatus": "passed",
+            "observedStatus": "passed"
+          },
+          {
+            "file": "superficial-ui.spec.ts",
+            "title": "limited UI coverage records confirmation only for NORMAL",
+            "projectName": "regression",
+            "status": "expected",
+            "expectedStatus": "passed",
+            "observedStatus": "passed"
+          },
+          {
+            "file": "superficial-ui.spec.ts",
+            "title": "limited UI coverage records confirmation only for GHOST_SUCCESS",
+            "projectName": "regression",
+            "status": "expected",
+            "expectedStatus": "passed",
+            "observedStatus": "passed"
+          },
+          {
+            "file": "superficial-ui.spec.ts",
+            "title": "limited UI coverage records confirmation only for VERIFICATION_UNAVAILABLE",
+            "projectName": "regression",
+            "status": "expected",
+            "expectedStatus": "passed",
+            "observedStatus": "passed"
+          }
+        ]
+      },
+      {
+        "command": "pnpm test:e2e",
+        "exitCode": 0,
+        "startedAt": "2026-11-10T22:19:31.839Z",
+        "durationMs": 15000.168000000001,
+        "tests": [
+          {
+            "file": "fault-ghost-characterization.spec.ts",
+            "title": "control: injected GHOST_SUCCESS is still absent from the order read",
+            "projectName": "regression",
+            "status": "expected",
+            "expectedStatus": "passed",
+            "observedStatus": "passed"
+          },
+          {
+            "file": "oracle-normal.spec.ts",
+            "title": "independent oracle confirms a NORMAL order and its server total",
+            "projectName": "regression",
+            "status": "expected",
+            "expectedStatus": "passed",
+            "observedStatus": "passed"
+          },
+          {
+            "file": "oracle-unavailable.spec.ts",
+            "title": "unavailable verification stays 503 UNKNOWN and is not a 404 defect",
+            "projectName": "regression",
+            "status": "expected",
+            "expectedStatus": "passed",
+            "observedStatus": "passed"
+          },
+          {
+            "file": "repeatability.spec.ts",
+            "title": "five consecutive NORMAL checkouts use distinct ids and each order is stored",
+            "projectName": "regression",
+            "status": "expected",
+            "expectedStatus": "passed",
+            "observedStatus": "passed"
+          },
+          {
+            "file": "superficial-ui.spec.ts",
+            "title": "limited UI coverage records confirmation only for NORMAL",
+            "projectName": "regression",
+            "status": "expected",
+            "expectedStatus": "passed",
+            "observedStatus": "passed"
+          },
+          {
+            "file": "superficial-ui.spec.ts",
+            "title": "limited UI coverage records confirmation only for GHOST_SUCCESS",
+            "projectName": "regression",
+            "status": "expected",
+            "expectedStatus": "passed",
+            "observedStatus": "passed"
+          },
+          {
+            "file": "superficial-ui.spec.ts",
+            "title": "limited UI coverage records confirmation only for VERIFICATION_UNAVAILABLE",
+            "projectName": "regression",
+            "status": "expected",
+            "expectedStatus": "passed",
+            "observedStatus": "passed"
+          }
+        ]
+      }
+    ],
+    "expectedNegative": [
+      {
+        "command": "pnpm test:e2e:ghost-oracle",
+        "exitCode": 1,
+        "startedAt": "2026-11-10T22:19:52.568Z",
+        "durationMs": 11993.512999999999,
+        "observedLookupStatus": 404,
+        "tests": [
+          {
+            "file": "oracle-ghost.spec.ts",
+            "title": "independent oracle requires a persisted order @expected-negative",
+            "projectName": "expected-negative",
+            "status": "unexpected",
+            "expectedStatus": "passed",
+            "observedStatus": "failed"
+          }
+        ]
+      },
+      {
+        "command": "pnpm test:e2e:ghost-oracle",
+        "exitCode": 1,
+        "startedAt": "2026-11-10T22:20:10.661Z",
+        "durationMs": 11939.140000000001,
+        "observedLookupStatus": 404,
+        "tests": [
+          {
+            "file": "oracle-ghost.spec.ts",
+            "title": "independent oracle requires a persisted order @expected-negative",
+            "projectName": "expected-negative",
+            "status": "unexpected",
+            "expectedStatus": "passed",
+            "observedStatus": "failed"
+          }
+        ]
+      },
+      {
+        "command": "pnpm test:e2e:ghost-oracle",
+        "exitCode": 1,
+        "startedAt": "2026-11-10T22:20:28.839Z",
+        "durationMs": 12437.778,
+        "observedLookupStatus": 404,
+        "tests": [
+          {
+            "file": "oracle-ghost.spec.ts",
+            "title": "independent oracle requires a persisted order @expected-negative",
+            "projectName": "expected-negative",
+            "status": "unexpected",
+            "expectedStatus": "passed",
+            "observedStatus": "failed"
+          }
+        ]
+      },
+      {
+        "command": "pnpm test:e2e:ghost-oracle",
+        "exitCode": 1,
+        "startedAt": "2026-11-10T22:20:47.549Z",
+        "durationMs": 11983.484,
+        "observedLookupStatus": 404,
+        "tests": [
+          {
+            "file": "oracle-ghost.spec.ts",
+            "title": "independent oracle requires a persisted order @expected-negative",
+            "projectName": "expected-negative",
+            "status": "unexpected",
+            "expectedStatus": "passed",
+            "observedStatus": "failed"
+          }
+        ]
+      },
+      {
+        "command": "pnpm test:e2e:ghost-oracle",
+        "exitCode": 1,
+        "startedAt": "2026-11-10T22:21:05.854Z",
+        "durationMs": 11938.978000000001,
+        "observedLookupStatus": 404,
+        "tests": [
+          {
+            "file": "oracle-ghost.spec.ts",
+            "title": "independent oracle requires a persisted order @expected-negative",
+            "projectName": "expected-negative",
+            "status": "unexpected",
+            "expectedStatus": "passed",
+            "observedStatus": "failed"
+          }
+        ]
+      }
+    ]
   },
   "failureAnalysis": {
     "regression": {

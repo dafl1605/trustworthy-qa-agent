@@ -12,7 +12,7 @@ export class BaselineInputError extends Error {
   }
 }
 
-export const BASELINE_VERSION = 'tqa-regression-baseline-1';
+export const BASELINE_VERSION = 'tqa-regression-baseline-2';
 export const REQUIRED_RUNS = 5;
 export const BASELINE_LIMITATION =
   'Five measured regression runs and five measured expected-negative runs on this machine. This is not a release decision, not a model score, and not a flakiness rate for any other environment.';
@@ -86,7 +86,34 @@ export interface ObservedRun {
   exitCode: number;
   startedAt: string;
   durationMs: number;
+  observedLookupStatus: number | null;
   tests: ObservedTest[];
+}
+
+export interface PersistedTest {
+  file: string;
+  title: string;
+  projectName: 'regression' | 'expected-negative';
+  status: PlaywrightStatus;
+  expectedStatus: ResultStatus;
+  observedStatus: ResultStatus;
+}
+
+export interface PersistedRegressionRun {
+  command: typeof REGRESSION_COMMAND;
+  exitCode: number;
+  startedAt: string;
+  durationMs: number;
+  tests: PersistedTest[];
+}
+
+export interface PersistedNegativeRun {
+  command: typeof NEGATIVE_COMMAND;
+  exitCode: number;
+  startedAt: string;
+  durationMs: number;
+  observedLookupStatus: number;
+  tests: PersistedTest[];
 }
 
 export interface RegressionAnalysis {
@@ -128,8 +155,13 @@ export interface FunctionalFreeze {
     observedStatus: 'failed';
     playwrightStatus: 'unexpected';
     classification: 'EXPECTED_NEGATIVE_ABSENT_ORDER';
+    observedLookupStatuses: number[];
     passedRuns: number;
     failedRuns: number;
+  };
+  observations: {
+    regression: PersistedRegressionRun[];
+    expectedNegative: PersistedNegativeRun[];
   };
   failureAnalysis: {
     regression: {
@@ -191,6 +223,83 @@ function playwrightStatus(value: unknown): PlaywrightStatus {
   return value as PlaywrightStatus;
 }
 
+const UTC_TIMESTAMP = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/;
+
+function utcTimestamp(value: unknown, code: string): string {
+  if (typeof value !== 'string' || !UTC_TIMESTAMP.test(value) || Number.isNaN(Date.parse(value))) {
+    fail(code, 'A run start time was not a UTC timestamp');
+  }
+  return value;
+}
+
+function positiveDuration(value: unknown, code: string): number {
+  if (typeof value !== 'number' || !Number.isFinite(value) || value <= 0) {
+    fail(code, 'A run duration was not a positive number');
+  }
+  return value;
+}
+
+function integerExitCode(value: unknown): number {
+  if (typeof value !== 'number' || !Number.isInteger(value)) {
+    fail('EXIT_CODE', 'The process exit code was not an integer');
+  }
+  return value;
+}
+
+function stripAnsi(value: string): string {
+  return value.replace(/\u001b\[[0-9;]*m/g, '');
+}
+
+function readLookupStatus(attempt: Record<string, unknown>): number | null {
+  const messages: string[] = [];
+  if (isRecord(attempt.error) && typeof attempt.error.message === 'string') {
+    messages.push(attempt.error.message);
+  }
+  if (Array.isArray(attempt.errors)) {
+    for (const entry of attempt.errors) {
+      if (isRecord(entry) && typeof entry.message === 'string') {
+        messages.push(entry.message);
+      }
+    }
+  }
+  const found = new Set<number>();
+  for (const message of messages) {
+    for (const line of stripAnsi(message).split(/\r?\n/)) {
+      const match = /^Received: (\d{3})$/.exec(line.trim());
+      if (match?.[1] === undefined) {
+        continue;
+      }
+      const status = Number(match[1]);
+      if (status < 100 || status > 599) {
+        fail('LOOKUP_STATUS', 'The ghost oracle did not record one HTTP status');
+      }
+      found.add(status);
+    }
+  }
+  if (found.size > 1) {
+    fail('LOOKUP_STATUS', 'The ghost oracle did not record one HTTP status');
+  }
+  if (found.size === 0) {
+    return null;
+  }
+  const status = [...found][0];
+  if (status === undefined) {
+    fail('LOOKUP_STATUS', 'The ghost oracle did not record one HTTP status');
+  }
+  return status;
+}
+
+function persistedTest(test: ObservedTest): PersistedTest {
+  return {
+    file: test.file,
+    title: test.title,
+    projectName: test.projectName,
+    status: test.status,
+    expectedStatus: test.expectedStatus,
+    observedStatus: test.observedStatus,
+  };
+}
+
 function collectSpecs(suite: unknown, into: Record<string, unknown>[]): void {
   if (!isRecord(suite)) {
     fail('REPORT_SHAPE', 'A suite was not an object');
@@ -233,22 +342,15 @@ export function summarizePlaywrightReport(
   if (!isRecord(report) || !Array.isArray(report.suites) || !isRecord(report.stats)) {
     fail('REPORT_SHAPE', 'The report did not have suites and stats');
   }
-  const startTime = report.stats.startTime;
-  const duration = report.stats.duration;
-  if (typeof startTime !== 'string' || !/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/.test(startTime)) {
-    fail('REPORT_SHAPE', 'The report start time was not a UTC timestamp');
-  }
-  if (Number.isNaN(Date.parse(startTime))) {
-    fail('REPORT_SHAPE', 'The report start time was not a UTC timestamp');
-  }
-  if (typeof duration !== 'number' || !Number.isFinite(duration) || duration <= 0) {
-    fail('REPORT_SHAPE', 'The report duration was not a positive number');
-  }
+  const startTime = utcTimestamp(report.stats.startTime, 'REPORT_SHAPE');
+  const duration = positiveDuration(report.stats.duration, 'REPORT_SHAPE');
   const specs: Record<string, unknown>[] = [];
   for (const suite of report.suites) {
     collectSpecs(suite, specs);
   }
   const tests: ObservedTest[] = [];
+  const lookups: number[] = [];
+  let lookupMissing = false;
   for (const spec of specs) {
     if (typeof spec.title !== 'string' || spec.title.length === 0 || !Array.isArray(spec.tests) || spec.tests.length !== 1) {
       fail('REPORT_SHAPE', 'A spec did not contain exactly one project result');
@@ -271,6 +373,14 @@ export function summarizePlaywrightReport(
     if (meta.command === NEGATIVE_COMMAND && projectName !== 'expected-negative') {
       fail('MIXED_PROJECT', 'The expected-negative command included another project');
     }
+    if (meta.command === NEGATIVE_COMMAND) {
+      const lookup = readLookupStatus(attempt);
+      if (lookup === null) {
+        lookupMissing = true;
+      } else {
+        lookups.push(lookup);
+      }
+    }
     tests.push({
       file: specFileName(spec.file),
       title: spec.title,
@@ -292,11 +402,22 @@ export function summarizePlaywrightReport(
   ) {
     fail('REPORT_SHAPE', 'The report stats did not match the parsed tests');
   }
+  let observedLookupStatus: number | null = null;
+  if (meta.command === NEGATIVE_COMMAND) {
+    const unique = new Set(lookups);
+    if (unique.size > 1) {
+      fail('LOOKUP_STATUS', 'The ghost oracle did not record one HTTP status');
+    }
+    if (!lookupMissing && unique.size === 1) {
+      observedLookupStatus = [...unique][0] ?? null;
+    }
+  }
   return {
     command: meta.command,
     exitCode: meta.exitCode,
     startedAt: startTime,
     durationMs: duration,
+    observedLookupStatus,
     tests,
   };
 }
@@ -350,8 +471,14 @@ function assertRegressionRun(run: ObservedRun): void {
   if (run.command !== REGRESSION_COMMAND) {
     fail('COMMAND', 'A regression slot used a different command');
   }
+  if (run.observedLookupStatus !== null) {
+    fail('LOOKUP_STATUS', 'A regression run recorded an oracle lookup status');
+  }
   const seen = new Set<string>();
   for (const test of run.tests) {
+    if (test.projectName !== 'regression') {
+      fail('MIXED_PROJECT', 'A regression run included a test outside the regression project');
+    }
     const expected = regressionCase(test.title);
     if (expected === undefined) {
       fail('UNCLASSIFIED_TEST', 'A regression run included a test outside the frozen inventory');
@@ -382,6 +509,9 @@ function assertNegativeRun(run: ObservedRun): void {
   if (test === undefined || test.title !== EXPECTED_NEGATIVE_CASE.title || test.file !== EXPECTED_NEGATIVE_CASE.file) {
     fail('INVENTORY', 'The expected-negative run did not contain only the ghost oracle');
   }
+  if (test.projectName !== 'expected-negative') {
+    fail('MIXED_PROJECT', 'The expected-negative run included another project');
+  }
   if (test.expectedStatus === 'failed' && test.status === 'expected') {
     fail(
       'HIDDEN_EXPECTED_NEGATIVE',
@@ -393,6 +523,12 @@ function assertNegativeRun(run: ObservedRun): void {
   }
   if (test.observedStatus !== 'failed' || test.status !== 'unexpected' || test.expectedStatus !== 'passed') {
     fail('EXPECTED_NEGATIVE_UNSTABLE', 'The ghost oracle did not fail as an unexpected persistence miss');
+  }
+  if (run.observedLookupStatus === null) {
+    fail('LOOKUP_STATUS', 'The ghost oracle did not record one HTTP status');
+  }
+  if (run.observedLookupStatus !== 404) {
+    fail('LOOKUP_NOT_ABSENT', 'The ghost oracle failure was not an HTTP 404. A 503 or a timeout is not a missing order.');
   }
   if (run.exitCode !== 1) {
     fail('INCONSISTENT_EXIT', 'The ghost oracle failed, and the process exit was not 1');
@@ -438,6 +574,12 @@ export function freezeFunctionalBaseline(input: {
     }
     return test.observedStatus;
   });
+  const observedLookupStatuses = input.expectedNegativeRuns.map((run) => {
+    if (run.observedLookupStatus !== 404) {
+      fail('LOOKUP_NOT_ABSENT', 'The ghost oracle failure was not an HTTP 404. A 503 or a timeout is not a missing order.');
+    }
+    return run.observedLookupStatus;
+  });
   return {
     baselineVersion: BASELINE_VERSION,
     source: 'supplied-observations',
@@ -470,8 +612,31 @@ export function freezeFunctionalBaseline(input: {
       observedStatus: 'failed',
       playwrightStatus: 'unexpected',
       classification: 'EXPECTED_NEGATIVE_ABSENT_ORDER',
+      observedLookupStatuses,
       passedRuns: 0,
       failedRuns: REQUIRED_RUNS,
+    },
+    observations: {
+      regression: input.regressionRuns.map((run) => ({
+        command: REGRESSION_COMMAND,
+        exitCode: run.exitCode,
+        startedAt: run.startedAt,
+        durationMs: run.durationMs,
+        tests: run.tests.map(persistedTest),
+      })),
+      expectedNegative: input.expectedNegativeRuns.map((run) => {
+        if (run.observedLookupStatus !== 404) {
+          fail('LOOKUP_NOT_ABSENT', 'The ghost oracle failure was not an HTTP 404. A 503 or a timeout is not a missing order.');
+        }
+        return {
+          command: NEGATIVE_COMMAND,
+          exitCode: run.exitCode,
+          startedAt: run.startedAt,
+          durationMs: run.durationMs,
+          observedLookupStatus: run.observedLookupStatus,
+          tests: run.tests.map(persistedTest),
+        };
+      }),
     },
     failureAnalysis: {
       regression: {
@@ -512,83 +677,97 @@ export function baselineJson(freeze: FunctionalFreeze): string {
   return `${JSON.stringify(freeze, null, 2)}\n`;
 }
 
-function isStringArray(value: unknown, length: number): value is string[] {
-  return Array.isArray(value) && value.length === length && value.every((entry) => typeof entry === 'string');
+function persistedSpecFile(file: unknown): string {
+  const name = specFileName(file);
+  if (file !== name) {
+    fail('BASELINE_SHAPE', 'A persisted spec file was not a base name');
+  }
+  return name;
 }
 
-function isNumberArray(value: unknown, length: number): value is number[] {
-  return Array.isArray(value) && value.length === length && value.every((entry) => typeof entry === 'number');
+function parsePersistedTest(value: unknown): ObservedTest {
+  if (!isRecord(value)) {
+    fail('BASELINE_SHAPE', 'A persisted test was not an object');
+  }
+  const projectName = value.projectName;
+  if (projectName !== 'regression' && projectName !== 'expected-negative') {
+    fail('MIXED_PROJECT', 'A persisted test named an unknown project');
+  }
+  if (typeof value.title !== 'string' || value.title.length === 0) {
+    fail('BASELINE_SHAPE', 'A persisted test was missing its title');
+  }
+  return {
+    file: persistedSpecFile(value.file),
+    title: value.title,
+    projectName,
+    status: playwrightStatus(value.status),
+    expectedStatus: resultStatus(value.expectedStatus),
+    observedStatus: resultStatus(value.observedStatus),
+  };
+}
+
+function parsePersistedTests(value: unknown): ObservedTest[] {
+  if (!Array.isArray(value)) {
+    fail('BASELINE_SHAPE', 'A persisted run was missing its tests');
+  }
+  return value.map((entry) => parsePersistedTest(entry));
+}
+
+function parseRegressionObservation(value: unknown): ObservedRun {
+  if (!isRecord(value)) {
+    fail('BASELINE_SHAPE', 'A persisted regression run was not an object');
+  }
+  if (value.command !== REGRESSION_COMMAND) {
+    fail('COMMAND', 'A persisted run used a different command');
+  }
+  if ('observedLookupStatus' in value) {
+    fail('BASELINE_SHAPE', 'A regression observation recorded an oracle lookup status');
+  }
+  return {
+    command: REGRESSION_COMMAND,
+    exitCode: integerExitCode(value.exitCode),
+    startedAt: utcTimestamp(value.startedAt, 'BASELINE_SHAPE'),
+    durationMs: positiveDuration(value.durationMs, 'BASELINE_SHAPE'),
+    observedLookupStatus: null,
+    tests: parsePersistedTests(value.tests),
+  };
+}
+
+function parseNegativeObservation(value: unknown): ObservedRun {
+  if (!isRecord(value)) {
+    fail('BASELINE_SHAPE', 'A persisted expected-negative run was not an object');
+  }
+  if (value.command !== NEGATIVE_COMMAND) {
+    fail('COMMAND', 'A persisted run used a different command');
+  }
+  if (typeof value.observedLookupStatus !== 'number' || !Number.isInteger(value.observedLookupStatus)) {
+    fail('LOOKUP_STATUS', 'The ghost oracle did not record one HTTP status');
+  }
+  if (value.observedLookupStatus < 100 || value.observedLookupStatus > 599) {
+    fail('LOOKUP_STATUS', 'The ghost oracle did not record one HTTP status');
+  }
+  return {
+    command: NEGATIVE_COMMAND,
+    exitCode: integerExitCode(value.exitCode),
+    startedAt: utcTimestamp(value.startedAt, 'BASELINE_SHAPE'),
+    durationMs: positiveDuration(value.durationMs, 'BASELINE_SHAPE'),
+    observedLookupStatus: value.observedLookupStatus,
+    tests: parsePersistedTests(value.tests),
+  };
 }
 
 export function loadMeasuredBaseline(path: string): FunctionalFreeze {
   const raw = readFileSync(path, 'utf8');
   const parsed: unknown = JSON.parse(raw);
-  if (!isRecord(parsed) || !isRecord(parsed.regression) || !isRecord(parsed.expectedNegative)) {
+  if (!isRecord(parsed) || !isRecord(parsed.observations)) {
     fail('BASELINE_SHAPE', 'The baseline file was not a freeze object');
   }
-  const regression = parsed.regression;
-  const negative = parsed.expectedNegative;
-  const regressionStartedAt = regression.startedAt;
-  const regressionDurationMs = regression.durationMs;
-  const regressionExitCodes = regression.exitCodes;
-  const negativeStartedAt = negative.startedAt;
-  const negativeDurationMs = negative.durationMs;
-  const negativeExitCodes = negative.exitCodes;
-  if (
-    !isStringArray(regressionStartedAt, REQUIRED_RUNS) ||
-    !isNumberArray(regressionDurationMs, REQUIRED_RUNS) ||
-    !isNumberArray(regressionExitCodes, REQUIRED_RUNS) ||
-    !isStringArray(negativeStartedAt, REQUIRED_RUNS) ||
-    !isNumberArray(negativeDurationMs, REQUIRED_RUNS) ||
-    !isNumberArray(negativeExitCodes, REQUIRED_RUNS) ||
-    !Array.isArray(regression.tests)
-  ) {
+  const observations = parsed.observations;
+  if (!isRecord(observations) || !Array.isArray(observations.regression) || !Array.isArray(observations.expectedNegative)) {
     fail('BASELINE_SHAPE', 'The baseline file was missing the measured run list');
   }
-  const regressionRuns: ObservedRun[] = regressionStartedAt.map((startedAt, index) => {
-    const durationMs = regressionDurationMs[index];
-    const exitCode = regressionExitCodes[index];
-    if (durationMs === undefined || exitCode === undefined) {
-      fail('BASELINE_SHAPE', 'The baseline file was missing the measured run list');
-    }
-    return {
-      command: REGRESSION_COMMAND,
-      exitCode,
-      startedAt,
-      durationMs,
-      tests: REGRESSION_CASES.map((expected) => ({
-        file: expected.file,
-        title: expected.title,
-        projectName: 'regression' as const,
-        status: 'expected' as const,
-        expectedStatus: 'passed' as const,
-        observedStatus: 'passed' as const,
-      })),
-    };
-  });
-  const expectedNegativeRuns: ObservedRun[] = negativeStartedAt.map((startedAt, index) => {
-    const durationMs = negativeDurationMs[index];
-    const exitCode = negativeExitCodes[index];
-    if (durationMs === undefined || exitCode === undefined) {
-      fail('BASELINE_SHAPE', 'The baseline file was missing the measured run list');
-    }
-    return {
-      command: NEGATIVE_COMMAND,
-      exitCode,
-      startedAt,
-      durationMs,
-      tests: [
-        {
-          file: EXPECTED_NEGATIVE_CASE.file,
-          title: EXPECTED_NEGATIVE_CASE.title,
-          projectName: 'expected-negative',
-          status: 'unexpected',
-          expectedStatus: 'passed',
-          observedStatus: 'failed',
-        },
-      ],
-    };
-  });
+  const regressionRuns = observations.regression.map((entry) => parseRegressionObservation(entry));
+  const expectedNegativeRuns = observations.expectedNegative.map((entry) => parseNegativeObservation(entry));
   const freeze = freezeFunctionalBaseline({ regressionRuns, expectedNegativeRuns });
   if (baselineJson(freeze) !== raw) {
     fail('BASELINE_SHAPE', 'The baseline file is not the canonical freeze of its measured runs');

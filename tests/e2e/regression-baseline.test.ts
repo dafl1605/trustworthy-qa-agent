@@ -1,5 +1,7 @@
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
+import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { describe, it } from 'node:test';
 import {
   analyzeRegressionRuns,
@@ -12,6 +14,7 @@ import {
   MEASURED_BASELINE_PATH,
   REGRESSION_CASES,
   summarizePlaywrightReport,
+  type FunctionalFreeze,
   type ObservedRun,
 } from './regression-baseline.ts';
 
@@ -39,18 +42,31 @@ function regressionReport(index: number, patch?: { title: string; observedStatus
 
 function negativeReport(
   index: number,
-  patch?: { observedStatus?: string; status?: string; expectedStatus?: string; exitCode?: number },
+  patch?: {
+    observedStatus?: string;
+    status?: string;
+    expectedStatus?: string;
+    exitCode?: number;
+    receivedStatus?: number | null;
+  },
 ): { report: unknown; exitCode: number } {
+  const receivedStatus = patch !== undefined && 'receivedStatus' in patch ? patch.receivedStatus : 404;
   return {
     exitCode: patch?.exitCode ?? 1,
-    report: report(`2026-11-10T02:00:0${index}.000Z`, 4_000 + index, 'expected-negative', [
-      {
-        ...EXPECTED_NEGATIVE_CASE,
-        observedStatus: patch?.observedStatus ?? 'failed',
-        status: patch?.status ?? 'unexpected',
-        expectedStatus: patch?.expectedStatus ?? 'passed',
-      },
-    ]),
+    report: report(
+      `2026-11-10T02:00:0${index}.000Z`,
+      4_000 + index,
+      'expected-negative',
+      [
+        {
+          ...EXPECTED_NEGATIVE_CASE,
+          observedStatus: patch?.observedStatus ?? 'failed',
+          status: patch?.status ?? 'unexpected',
+          expectedStatus: patch?.expectedStatus ?? 'passed',
+        },
+      ],
+      receivedStatus,
+    ),
   };
 }
 
@@ -65,6 +81,7 @@ function report(
     status: string;
     expectedStatus: string;
   }[],
+  receivedStatus?: number | null,
 ): unknown {
   const stats = { expected: 0, unexpected: 0, flaky: 0, skipped: 0 };
   for (const entry of cases) {
@@ -98,7 +115,12 @@ function report(
                   results: [
                     {
                       status: entry.observedStatus,
-                      error: { message: LEAK },
+                      error: {
+                        message:
+                          typeof receivedStatus === 'number'
+                            ? `${LEAK}\nExpected: 200\nReceived: ${receivedStatus}\n`
+                            : LEAK,
+                      },
                     },
                   ],
                 },
@@ -137,7 +159,7 @@ function codeOf(action: () => void): string {
 describe('regression baseline', () => {
   it('freezes five green regression runs and five stable ghost-oracle failures', () => {
     const freeze = freezeFunctionalBaseline(runs());
-    assert.equal(freeze.baselineVersion, 'tqa-regression-baseline-1');
+    assert.equal(freeze.baselineVersion, 'tqa-regression-baseline-2');
     assert.equal(freeze.source, 'supplied-observations');
     assert.equal(freeze.playwrightInvokedByModule, false);
     assert.equal(freeze.functionalFreeze, true);
@@ -158,6 +180,17 @@ describe('regression baseline', () => {
       true,
     );
     assert.equal(freeze.expectedNegative.classification, 'EXPECTED_NEGATIVE_ABSENT_ORDER');
+    assert.deepEqual(freeze.expectedNegative.observedLookupStatuses, [404, 404, 404, 404, 404]);
+    assert.equal(freeze.observations.regression.length, 5);
+    assert.equal(freeze.observations.regression[0]?.tests.length, 7);
+    assert.equal(
+      freeze.observations.regression.every((run) => run.tests.every((test) => test.observedStatus === 'passed' && test.projectName === 'regression')),
+      true,
+    );
+    assert.deepEqual(
+      freeze.observations.expectedNegative.map((run) => run.observedLookupStatus),
+      [404, 404, 404, 404, 404],
+    );
     assert.equal(freeze.expectedNegative.passedRuns, 0);
     assert.equal(freeze.expectedNegative.failedRuns, 5);
     assert.deepEqual(freeze.expectedNegative.exitCodes, [1, 1, 1, 1, 1]);
@@ -283,13 +316,149 @@ describe('regression baseline', () => {
   });
 
   it('loads the measured baseline file as the same freeze', () => {
+    const raw = readFileSync(MEASURED_BASELINE_PATH, 'utf8');
+    const stored: unknown = JSON.parse(raw);
+    assert.equal(isStoredBaseline(stored), true);
+    if (!isStoredBaseline(stored)) {
+      return;
+    }
+    assert.equal(stored.observations.regression.length, 5);
+    assert.equal(stored.observations.expectedNegative.length, 5);
+    assert.equal(
+      stored.observations.regression.every((run) => run.tests.every((test) => test.observedStatus === 'passed' && test.projectName === 'regression')),
+      true,
+    );
+    assert.equal(stored.observations.expectedNegative.every((run) => run.observedLookupStatus === 404), true);
     const freeze = loadMeasuredBaseline(MEASURED_BASELINE_PATH);
     assert.equal(freeze.regression.runs, 5);
     assert.equal(freeze.expectedNegative.failedRuns, 5);
     assert.equal(freeze.expectedNegative.passedRuns, 0);
+    assert.deepEqual(freeze.expectedNegative.observedLookupStatuses, [404, 404, 404, 404, 404]);
     assert.equal(new Set(freeze.regression.startedAt).size, 5);
     assert.equal(new Set(freeze.expectedNegative.startedAt).size, 5);
     assert.equal(freeze.regression.durationMs.every((duration) => duration > 0), true);
     assert.equal(baselineJson(freeze).includes(LEAK), false);
+    assert.equal(raw.includes('/tmp'), false);
+    assert.equal(raw.includes('orderId'), false);
+  });
+
+  it('rejects a wrong project name inside the freeze', () => {
+    const sample = runs();
+    const regressionRuns = structuredClone(sample.regressionRuns);
+    const firstRegression = regressionRuns[0];
+    const firstTest = firstRegression?.tests[0];
+    assert.ok(firstRegression && firstTest);
+    firstTest.projectName = 'expected-negative';
+    assert.equal(codeOf(() => freezeFunctionalBaseline({ ...sample, regressionRuns })), 'MIXED_PROJECT');
+    const expectedNegativeRuns = structuredClone(sample.expectedNegativeRuns);
+    const firstNegative = expectedNegativeRuns[0];
+    const negativeTest = firstNegative?.tests[0];
+    assert.ok(firstNegative && negativeTest);
+    negativeTest.projectName = 'regression';
+    assert.equal(codeOf(() => freezeFunctionalBaseline({ ...sample, expectedNegativeRuns })), 'MIXED_PROJECT');
+  });
+
+  it('refuses a ghost-oracle failure that is not HTTP 404', () => {
+    const sample = runs();
+    const unavailable = [1, 2, 3, 4, 5].map((index) => {
+      const built = negativeReport(index, { receivedStatus: 503 });
+      return summarizePlaywrightReport(built.report, { command: 'pnpm test:e2e:ghost-oracle', exitCode: built.exitCode });
+    });
+    assert.equal(codeOf(() => freezeFunctionalBaseline({ ...sample, expectedNegativeRuns: unavailable })), 'LOOKUP_NOT_ABSENT');
+    const missing = [1, 2, 3, 4, 5].map((index) => {
+      const built = negativeReport(index, { receivedStatus: null });
+      return summarizePlaywrightReport(built.report, { command: 'pnpm test:e2e:ghost-oracle', exitCode: built.exitCode });
+    });
+    assert.equal(codeOf(() => freezeFunctionalBaseline({ ...sample, expectedNegativeRuns: missing })), 'LOOKUP_STATUS');
+  });
+
+  it('parses persisted runs and rejects a file that only restates the summary', () => {
+    const saved = freezeFunctionalBaseline(runs());
+    const loaded = loadJson(baselineJson(saved));
+    assert.equal(baselineJson(loaded), baselineJson(saved));
+    const failed = structuredClone(saved);
+    const failedTest = failed.observations.regression[0]?.tests[0];
+    assert.ok(failedTest);
+    failedTest.observedStatus = 'failed';
+    failedTest.status = 'unexpected';
+    assert.equal(loadCode(failed), 'FLAKY');
+    const stableMiss = structuredClone(saved);
+    for (const run of stableMiss.observations.regression) {
+      const test = run.tests[0];
+      assert.ok(test);
+      test.observedStatus = 'failed';
+      test.status = 'unexpected';
+    }
+    assert.equal(loadCode(stableMiss), 'REGRESSION_FAILED');
+    const passedOracle = structuredClone(saved);
+    const passedRun = passedOracle.observations.expectedNegative[0];
+    const passedTest = passedRun?.tests[0];
+    assert.ok(passedRun && passedTest);
+    passedRun.exitCode = 0;
+    passedTest.observedStatus = 'passed';
+    passedTest.status = 'expected';
+    assert.equal(loadCode(passedOracle), 'GHOST_ORACLE_PASSED');
+    const hidden = structuredClone(saved);
+    const hiddenRun = hidden.observations.expectedNegative[1];
+    const hiddenTest = hiddenRun?.tests[0];
+    assert.ok(hiddenRun && hiddenTest);
+    hiddenRun.exitCode = 0;
+    hiddenTest.expectedStatus = 'failed';
+    hiddenTest.status = 'expected';
+    assert.equal(loadCode(hidden), 'HIDDEN_EXPECTED_NEGATIVE');
+    const duplicate = structuredClone(saved);
+    const firstStart = duplicate.observations.regression[0]?.startedAt;
+    const secondRun = duplicate.observations.regression[1];
+    assert.ok(firstStart && secondRun);
+    secondRun.startedAt = firstStart;
+    assert.equal(loadCode(duplicate), 'DUPLICATE_START');
+    const short = structuredClone(saved);
+    short.observations.regression.pop();
+    assert.equal(loadCode(short), 'RUN_COUNT');
+    const serviceUnavailable = structuredClone(saved);
+    const unavailableRun = serviceUnavailable.observations.expectedNegative[0];
+    assert.ok(unavailableRun);
+    unavailableRun.observedLookupStatus = 503;
+    assert.equal(loadCode(serviceUnavailable), 'LOOKUP_NOT_ABSENT');
+    assert.equal(loadCode({ regression: { exitCodes: [0, 0, 0, 0, 0] }, expectedNegative: { exitCodes: [1, 1, 1, 1, 1] } }), 'BASELINE_SHAPE');
   });
 });
+
+function isStoredBaseline(value: unknown): value is {
+  observations: {
+    regression: { tests: { observedStatus: string; projectName: string }[] }[];
+    expectedNegative: { observedLookupStatus: number }[];
+  };
+} {
+  if (typeof value !== 'object' || value === null || !('observations' in value)) {
+    return false;
+  }
+  const observations = value.observations;
+  if (typeof observations !== 'object' || observations === null) {
+    return false;
+  }
+  return 'regression' in observations && 'expectedNegative' in observations;
+}
+
+function loadJson(raw: string): FunctionalFreeze {
+  const dir = mkdtempSync(join(tmpdir(), 'tqa-baseline-'));
+  const path = join(dir, 'baseline.json');
+  try {
+    writeFileSync(path, raw);
+    return loadMeasuredBaseline(path);
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+}
+
+function loadCode(value: unknown): string {
+  const raw = `${JSON.stringify(value, null, 2)}\n`;
+  const dir = mkdtempSync(join(tmpdir(), 'tqa-baseline-'));
+  const path = join(dir, 'baseline.json');
+  try {
+    writeFileSync(path, raw);
+    return codeOf(() => loadMeasuredBaseline(path));
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+}

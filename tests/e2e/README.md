@@ -32,7 +32,7 @@ JSON evidence is written under `test-results/evidence/`. Those files are local a
 
 ## QA-15 functional freeze
 
-`fixtures/regression-baseline/baseline.json` records five `pnpm test:e2e` runs and five `pnpm test:e2e:ghost-oracle` runs. The regression runs passed the same seven tests. The ghost-oracle runs exited 1. The assertion in `oracle-ghost.spec.ts` still expects HTTP 200. A pass on that command would mean the missing order was no longer visible, and the freeze rejects it. A change that marks the failure as an expected Playwright success is also rejected, because that would hide the red assertion.
+`fixtures/regression-baseline/baseline.json` records five `pnpm test:e2e` runs and five `pnpm test:e2e:ghost-oracle` runs. Each run stores its own test statuses. The regression runs passed the same seven tests. The ghost-oracle runs exited 1 and each stored lookup status is 404. The assertion in `oracle-ghost.spec.ts` still expects HTTP 200. A pass on that command would mean the missing order was no longer visible, and the freeze rejects it. A 503 or a timeout is not frozen as that missing order. A change that marks the failure as an expected Playwright success is also rejected, because that would hide the red assertion. The loader reads the stored runs; it does not fill in a pass that the file left out.
 
 `tests/e2e/regression-baseline.ts` reads reports the caller already saved. It does not launch Playwright. `pnpm test` checks the committed file and the refusal rules. It does not repeat the ten browser runs. Replacing the file requires five new regression runs and five new ghost-oracle runs, then the writer below. Copying one report five times is rejected because the start timestamps would match.
 
