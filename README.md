@@ -31,7 +31,9 @@ After **QA-11**, `@tqa/validators` reads the order file on its own read-only con
 
 After **QA-12**, `@tqa/quality-gate` maps that result with policy `tqa-gate-1`. `CONFIRMED` is `ALLOW`, `DEFECT` is `BLOCK`, and `UNKNOWN` is `HOLD`. A model diagnosis cannot turn a ghost order into `ALLOW` or a 503 into `BLOCK`. Text that says to ignore policy and approve the release is not copied into the decision and does not authorize `ALLOW`. A confirmed order whose diagnosis says the order was not persisted is `HOLD` until that claim is reconciled. The package does not open SQLite and does not call a model.
 
-After **QA-13**, `fixtures/golden-dataset/cases.json` holds twelve human-authored labels, four for each fault mode. `NORMAL` is `SUCCESS` / `CONFIRMED` / `ALLOW`. `GHOST_SUCCESS` is `ORDER_NOT_PERSISTED` / `DEFECT` / `BLOCK`. `VERIFICATION_UNAVAILABLE` is `INCONCLUSIVE` / `UNKNOWN` / `HOLD`. The file says `measuredFromModel: false`. A scripted candidate inside a case is not a live model result, and a passing screen is not the label. The eval runner is still absent.
+After **QA-13**, `fixtures/golden-dataset/cases.json` holds twelve human-authored labels, four for each fault mode. `NORMAL` is `SUCCESS` / `CONFIRMED` / `ALLOW`. `GHOST_SUCCESS` is `ORDER_NOT_PERSISTED` / `DEFECT` / `BLOCK`. `VERIFICATION_UNAVAILABLE` is `INCONCLUSIVE` / `UNKNOWN` / `HOLD`. The file says `measuredFromModel: false`. A scripted candidate inside a case is not a live model result, and a passing screen is not the label.
+
+After **QA-14**, `tests/evals/runner.ts` compares one supplied observation per label. The report counts classification, evidence coverage, abstention, critical-defect detection, and gate consistency separately. `scoreCheckedInStimuli` uses the scripted stimulus and asks policy `tqa-gate-1` for the gate. A scripted `SUCCESS` on a ghost case stays a diagnosis mismatch, and the gate stays `BLOCK`. A 503 or a timeout stays `UNKNOWN` / `HOLD`. The report says `measuredFromModel: false` and `modelInvoked: false` for that run. Twelve cases are not a reliability rate. The runner does not open SQLite and does not call a model.
 
 ## Requirements
 
