@@ -1,4 +1,6 @@
-export { InvestigationConfigError, ToolConfigError } from './errors.js';
+export { DiagnosisConfigError, InvestigationConfigError, ToolConfigError } from './errors.js';
+export { CheckedDiagnosisSchema, checkModelDiagnosis } from './diagnosis.js';
+export type { CheckedDiagnosis, DiagnosisEvidenceIndex } from './diagnosis.js';
 export { runInvestigation } from './loop.js';
 export {
   INVESTIGATION_SYSTEM_PROMPT,

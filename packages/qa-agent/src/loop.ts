@@ -104,7 +104,8 @@ function isProvider(value: LlmProvider): boolean {
 /**
  * One bounded investigation. The model may request the read-only tools.
  * The returned report does not classify the order and does not decide a gate.
- * Diagnosis claims are QA-10. Authoritative verification is QA-11.
+ * Claim checks live in checkModelDiagnosis. This loop does not call it.
+ * Authoritative verification is QA-11.
  */
 export async function runInvestigation(options: {
   runId: string;

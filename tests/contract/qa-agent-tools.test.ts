@@ -117,6 +117,8 @@ function sourceFiles(): { name: string; source: string }[] {
 describe('read-only investigation tools', () => {
   it('exports the tool session and the investigation surface', () => {
     assert.deepEqual(Object.keys(agent).sort(), [
+      'CheckedDiagnosisSchema',
+      'DiagnosisConfigError',
       'INVESTIGATION_SYSTEM_PROMPT',
       'InvestigationConfigError',
       'InvestigationReportSchema',
@@ -124,6 +126,7 @@ describe('read-only investigation tools', () => {
       'ReadOnlyToolSession',
       'ToolConfigError',
       'ToolResultSchema',
+      'checkModelDiagnosis',
       'createOpenAiCompatibleProvider',
       'createScriptedProvider',
       'readOpenAiCompatibleSettings',

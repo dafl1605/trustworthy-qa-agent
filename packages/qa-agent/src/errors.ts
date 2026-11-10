@@ -11,3 +11,10 @@ export class InvestigationConfigError extends Error {
     this.name = 'InvestigationConfigError';
   }
 }
+
+export class DiagnosisConfigError extends Error {
+  constructor(message = 'diagnosis check configuration failed validation') {
+    super(message);
+    this.name = 'DiagnosisConfigError';
+  }
+}

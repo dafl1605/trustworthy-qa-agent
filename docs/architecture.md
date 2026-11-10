@@ -1,4 +1,4 @@
-# Architecture — QA-01 scaffold, QA-02 checkout API, QA-03 storefront shell, QA-04 commerce UI, QA-05 fault harness, QA-06 Playwright oracle, QA-07 evidence collector, QA-08 read-only tools, QA-09 investigation loop
+# Architecture — QA-01 scaffold, QA-02 checkout API, QA-03 storefront shell, QA-04 commerce UI, QA-05 fault harness, QA-06 Playwright oracle, QA-07 evidence collector, QA-08 read-only tools, QA-09 investigation loop, QA-10 diagnosis check
 
 This note is the as-built skeleton. Observable product behavior still lives in `docs/spec.md`. Domain names live in `docs/architecture-contracts.md`. Foundation choices live in `docs/adr/0001-runtime-foundations.md`.
 
@@ -12,13 +12,13 @@ Requires Node.js `>=22.13.0` (this VM: `22.23.4`) and pnpm `10.33.4`. `runId` an
 | `apps/api` | Loopback Node.js server. `GET /health`, fixture catalog, checkout, order lookup, and the local fault harness. Schema apply lives on `@tqa/api/migrate`. The independent order read lives on `@tqa/api/verify`. Neither is exported from the package root |
 | `packages/shared` | Zod schemas and inferred types for the MVP contracts, including deferred `VerificationResult` and `EvalCase` |
 | `packages/evidence-collector` | In-memory `EvidenceRecord` index. Correlates `runId` and `orderId`. Does not open SQLite and does not decide a gate |
-| `packages/qa-agent` | Five read-only investigation tools, one provider adapter, and one bounded actor loop. No diagnosis schema, no gate, no SQLite |
+| `packages/qa-agent` | Five read-only investigation tools, one provider adapter, one bounded actor loop, and one diagnosis claim check. No gate and no SQLite |
 | `tests/contract` | Schema, migration, health, checkout persistence, order lookup, config, and log checks |
 | `tests/e2e` | Playwright UI coverage, independent order oracle, and JSON evidence (QA-06) |
 | `tests/evals` | Reserved for the eval runner (QA-14). Empty |
 | `fixtures/golden-dataset` | Reserved for 12 labeled cases (QA-13). Empty |
 
-`@tqa/qa-agent` is the QA-08 tool package and the QA-09 investigation loop. It does not yet parse a diagnosis. Later packages from the contract doc are not created yet: `validators` and `quality-gate`. `@tqa/evidence-collector` is the QA-07 package.
+`@tqa/qa-agent` is the QA-08 tool package, the QA-09 investigation loop, and the QA-10 diagnosis check. The loop still does not parse a diagnosis. `checkModelDiagnosis` does, and it does not decide a gate. Later packages from the contract doc are not created yet: `validators` and `quality-gate`. `@tqa/evidence-collector` is the QA-07 package.
 
 ## Workspace
 
@@ -139,7 +139,7 @@ Inputs are strict objects. An unknown field, a bad UUID, or a limit outside 1–
 
 `lookup_order` calls an injected function and aborts that call when `timeoutMs` elapses. A returned 404 `ABSENT` is `OK` with `observation: 'ABSENT'`. A returned 503 is `UNAVAILABLE` and does not say the order is missing. A session deadline is `TIMEOUT` and is not a 404. `OK` means the tool returned an observation. It is not a release approval. The injected function is not the QA-11 validator, and this package does not emit `ALLOW`, `BLOCK`, or `HOLD`.
 
-Diagnosis claims are QA-10. The tool session itself does not retry a lookup. Provider retries belong to the investigation loop below.
+Diagnosis claims are checked by `checkModelDiagnosis` below. The tool session itself does not retry a lookup and does not call that checker. Provider retries belong to the investigation loop below.
 
 ## Investigation loop (QA-09)
 
@@ -153,11 +153,25 @@ The loop asks the provider, then either stops on a final note or calls the tool 
 
 `readOpenAiCompatibleSettings` reads `LLM_PROVIDER`, `LLM_BASE_URL`, `LLM_MODEL`, and `LLM_API_KEY`. It returns `configured: false` unless the provider value is exactly `openai-compatible` and the other three are present. It does not call the network. The loop does not read the environment by itself. `.env.example` still has empty placeholders.
 
-The report field `orderClassified` is always false. `gateDecision` is always null. `untrustedFinalText` is the model's note, redacted and wrapped as untrusted text. A secret-shaped model string is redacted before it is stored. Parsing that note into claims and evidence ids is QA-10. This loop does not decide whether a ghost checkout failed.
+The report field `orderClassified` is always false. `gateDecision` is always null. `untrustedFinalText` is the model's note, redacted and wrapped as untrusted text. A secret-shaped model string is redacted before it is stored. This loop does not parse that note and does not decide whether a ghost checkout failed.
+
+## Diagnosis check (QA-10)
+
+`checkModelDiagnosis` parses one candidate with `AgentDiagnosisSchema` from `@tqa/shared`. The shared contract is unchanged. A string is parsed only when it is JSON and is not already wrapped as `[UNTRUSTED_TEXT:…]`. Prose, malformed JSON, an unknown field such as `decision` or `gate`, a bad diagnosis enum, or a blank claim returns `parseStatus: 'UNPARSEABLE'`. That result has no model label. It does not default to `SUCCESS`.
+
+A parsed object whose `runId` differs from the supplied run is `RUN_MISMATCH`. Its checked label is null. Claim support is forced to `UNKNOWN`.
+
+For a matching run, each claim is compared with `EvidenceCollector.citation`. An empty `evidenceIds` array is citation `UNVERIFIED` and support `UNVERIFIED`. An id that is not in the index is citation `UNKNOWN_IDS` and support `UNKNOWN`. That unknown id is not treated as a missing order. A cited record from another `runId` is also `UNKNOWN`.
+
+Support uses the record `kind`, not the summary sentence. `order-lookup-found` agrees with model label `SUCCESS`. `order-lookup-absent` agrees with `ORDER_NOT_PERSISTED`. Those claims are support `CITED` only when the claim text does not name `ALLOW`, `BLOCK`, or `HOLD` and does not tell the reader to ignore previous instructions. A claim that does is `UNVERIFIED`. The sentence is not otherwise parsed as a fact. A UI confirmation, a checkout response, a log line, or a caller `orders-row-count` does not agree with either label, so the claim stays `UNVERIFIED` even when the id exists. `order-lookup-unavailable`, `order-lookup-inconsistent`, and `order-lookup-run-mismatch` are `UNKNOWN`, including a 503 `service_unavailable` and a 503 `timeout`. A summary that says `404 ABSENT` does not override an unavailable kind. A claim that cites both a found kind and an absent kind is `UNKNOWN`.
+
+`checkedDiagnosis` keeps the model's label only when every claim is `CITED`. Otherwise a parsed diagnosis is `INCONCLUSIVE`. The checker does not rewrite a model `SUCCESS` into `ORDER_NOT_PERSISTED`, and it does not rewrite an abstention into `SUCCESS`. `needsHumanReview` stays true when the model asked for it, when any claim is not `CITED`, or when the parse did not match the run. `releaseAuthorized` is false. `gateDecision` is null. Nothing in this function emits `ALLOW`, `BLOCK`, or `HOLD`.
+
+Secrets in the summary, the claim text, and echoed evidence ids are redacted before they are stored. The investigation loop does not call this function. A scripted object passed to it is fixture input, not a live model result.
 
 ## Explicitly absent
 
-The diagnosis schema and claim checks, the independent validator package, the quality gate, the golden dataset, authentication, payments, and deployment. The investigation report is not that diagnosis and not that gate. The storefront still has no scenario control and does not call `GET /api/orders/:orderId`. A ghost confirmation can appear on that page; the page still does not decide whether the order was saved.
+The independent validator package, the quality gate, the golden dataset, authentication, payments, and deployment. The investigation report is not a diagnosis and not a gate. `checkedDiagnosis` is not a gate either. The storefront still has no scenario control and does not call `GET /api/orders/:orderId`. A ghost confirmation can appear on that page; the page still does not decide whether the order was saved.
 
 ## Playwright (QA-06)
 
