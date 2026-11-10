@@ -1,4 +1,4 @@
-# Architecture — QA-01 scaffold, QA-02 checkout API, QA-03 storefront shell, QA-04 commerce UI, QA-05 fault harness, QA-06 Playwright oracle, QA-07 evidence collector, QA-08 read-only tools, QA-09 investigation loop, QA-10 diagnosis check, QA-11 independent validator, QA-12 quality gate
+# Architecture — QA-01 scaffold, QA-02 checkout API, QA-03 storefront shell, QA-04 commerce UI, QA-05 fault harness, QA-06 Playwright oracle, QA-07 evidence collector, QA-08 read-only tools, QA-09 investigation loop, QA-10 diagnosis check, QA-11 independent validator, QA-12 quality gate, QA-13 golden dataset
 
 This note is the as-built skeleton. Observable product behavior still lives in `docs/spec.md`. Domain names live in `docs/architecture-contracts.md`. Foundation choices live in `docs/adr/0001-runtime-foundations.md`.
 
@@ -10,7 +10,7 @@ Requires Node.js `>=22.13.0` (this VM: `22.23.4`) and pnpm `10.33.4`. `runId` an
 |---|---|
 | `apps/storefront` | React + Vite catalog, cart, checkout, and confirmation. The page calls `GET /api/products` and `POST /api/checkout` through the Vite `/api` proxy. It does not call `GET /api/orders/:orderId` |
 | `apps/api` | Loopback Node.js server. `GET /health`, fixture catalog, checkout, order lookup, and the local fault harness. Schema apply lives on `@tqa/api/migrate`. The independent order read lives on `@tqa/api/verify`. Neither is exported from the package root |
-| `packages/shared` | Zod schemas and inferred types for the MVP contracts, including deferred `VerificationResult` and `EvalCase` |
+| `packages/shared` | Zod schemas and inferred types for the MVP contracts. `EvalCase` stays the decision-matrix schema. The twelve labels live in the golden dataset |
 | `packages/evidence-collector` | In-memory `EvidenceRecord` index. Correlates `runId` and `orderId`. Does not open SQLite and does not decide a gate |
 | `packages/qa-agent` | Five read-only investigation tools, one provider adapter, one bounded actor loop, and one diagnosis claim check. No gate and no SQLite |
 | `packages/validators` | Independent read-only order check. Opens its own SQLite connection and returns `CONFIRMED`, `DEFECT`, or `UNKNOWN`. No gate |
@@ -18,7 +18,7 @@ Requires Node.js `>=22.13.0` (this VM: `22.23.4`) and pnpm `10.33.4`. `runId` an
 | `tests/contract` | Schema, migration, health, checkout persistence, order lookup, config, log, validator, and quality-gate checks |
 | `tests/e2e` | Playwright UI coverage, independent order oracle, and JSON evidence (QA-06) |
 | `tests/evals` | Reserved for the eval runner (QA-14). Empty |
-| `fixtures/golden-dataset` | Reserved for 12 labeled cases (QA-13). Empty |
+| `fixtures/golden-dataset` | Twelve human-authored labels in `cases.json` (QA-13). Not a model score and not a runner |
 
 `@tqa/qa-agent` is the QA-08 tool package, the QA-09 investigation loop, and the QA-10 diagnosis check. The loop still does not parse a diagnosis. `checkModelDiagnosis` does, and it does not decide a gate. `@tqa/validators` is the QA-11 package. It does not decide a gate. `@tqa/quality-gate` is the QA-12 package. It decides from a `VerificationResult` and does not open the order file. `@tqa/evidence-collector` is the QA-07 package.
 
@@ -85,7 +85,7 @@ Presence of an `orders` row means persisted. Absence is not represented by a sta
 - gate: `ALLOW`, `BLOCK`, `HOLD`
 - diagnosis: `SUCCESS`, `ORDER_NOT_PERSISTED`, `INCONCLUSIVE`, `OTHER`
 - `EvidenceRecord`, `AgentDiagnosis`, `GateDecision`
-- `VerificationResult` and `EvalCase`. QA-11 returns `VerificationResult`. The eval runner is still absent
+- `VerificationResult` and `EvalCase`. QA-11 returns `VerificationResult`. QA-13 stores twelve `EvalCase` labels. The eval runner is still absent
 - `OrderRecord` aligned with the table: integer cents, currency `USD`, 1 to 3 unique line items, UUID `runId` and `orderId`
 - `CheckoutRequest`, `Product`, `CheckoutConfirmation`, and `OrderLookupResult` are the HTTP shapes used by the QA-02 routes. `OrderLookupResult` encodes FOUND/200, ABSENT/404, and UNAVAILABLE/503 so UNKNOWN cannot be stored as a missing order
 - Checkout and order items reject duplicate SKUs, SKUs longer than 64 characters, and quantities outside 1–99
@@ -193,9 +193,17 @@ The decision copies `runId` and `verificationId` only. It does not copy `details
 
 The package does not wire this function into the investigation loop or into Playwright. O-001 through O-007 stay UNVERIFIED until QA-15.
 
+## Golden dataset (QA-13)
+
+`fixtures/golden-dataset/cases.json` is dataset `tqa-golden-v1`. It holds twelve cases: four `NORMAL` / `SUCCESS` / `CONFIRMED` / `ALLOW`, four `GHOST_SUCCESS` / `ORDER_NOT_PERSISTED` / `DEFECT` / `BLOCK`, and four `VERIFICATION_UNAVAILABLE` / `INCONCLUSIVE` / `UNKNOWN` / `HOLD`. `tests/contract/golden-dataset.ts` parses each case with `EvalCaseSchema` and rejects a label that leaves that matrix. Provenance says a human authored the labels on 2026-11-10 from the decision matrix. `measuredFromModel` is false.
+
+Every stimulus keeps a passing screen. The screen is not the label. A scripted candidate that says `SUCCESS` on a ghost case does not change `BLOCK`. A scripted candidate that treats a 503 as a missing order does not change `HOLD`. `UNAVAILABLE_TIMEOUT` and `TOOL_TIMEOUT` stay distinct from `ABSENT`. `candidateSource` is `scripted-fixture` or `none`. Neither is a live model result. The loader does not import the gate, the validator, or the agent, and it does not open SQLite.
+
+The QA-12 contradiction, a `CONFIRMED` result with an `ORDER_NOT_PERSISTED` diagnosis, stays out of this file. That `HOLD` is gate policy. It is not an `EvalCase`. The runner and any count produced by running a model remain QA-14.
+
 ## Explicitly absent
 
-The golden dataset, authentication, payments, and deployment. The investigation report is not a diagnosis and not a gate. `checkedDiagnosis` is not a gate either. `verifyOrder` is not a gate. The storefront still has no scenario control and does not call `GET /api/orders/:orderId`. A ghost confirmation can appear on that page; the page still does not decide whether the order was saved.
+The eval runner, authentication, payments, and deployment. The investigation report is not a diagnosis and not a gate. `checkedDiagnosis` is not a gate either. `verifyOrder` is not a gate. The golden dataset is not a gate and not a measured accuracy report. The storefront still has no scenario control and does not call `GET /api/orders/:orderId`. A ghost confirmation can appear on that page; the page still does not decide whether the order was saved.
 
 ## Playwright (QA-06)
 
