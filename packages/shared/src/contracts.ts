@@ -143,7 +143,7 @@ export const OrderLookupResultSchema = z.discriminatedUnion('code', [
 
 /**
  * Independent validator output. The read-only runtime is `@tqa/validators`.
- * ALLOW may follow only from CONFIRMED here, never from an LLM claim alone.
+ * `@tqa/quality-gate` may emit ALLOW only from CONFIRMED, never from an LLM claim alone.
  * This schema does not itself emit a gate decision.
  */
 export const VerificationResultSchema = z.object({
@@ -168,7 +168,9 @@ const GATE_FOR_VERIFICATION = {
 
 /**
  * Labeled eval fixture. Runtime runner and dataset work are QA-13/QA-14.
- * Labels must follow the decision matrix; this is not a running gate.
+ * These labels are the scenario matrix with no contradictory diagnosis.
+ * `@tqa/quality-gate` can still HOLD a CONFIRMED result when the supplied
+ * diagnosis says the order was not persisted. That HOLD is not an EvalCase.
  */
 export const EvalCaseSchema = z
   .object({

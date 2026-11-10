@@ -2,7 +2,7 @@
 
 | Path | Purpose | Introduced in |
 | --- | --- | --- |
-| `tests/contract/` | Zod contracts, SQLite schema, checkout, harness, the evidence collector, the read-only tools, the bounded investigation loop, diagnosis claim checks, and the independent validator | QA-01, extended through QA-11 |
+| `tests/contract/` | Zod contracts, SQLite schema, checkout, harness, the evidence collector, the read-only tools, the bounded investigation loop, diagnosis claim checks, the independent validator, and the quality gate | QA-01, extended through QA-12 |
 | `tests/e2e/` | Playwright UI + independent oracle checks | QA-06 |
 | `tests/evals/` | Labeled-case evaluation runner outputs | QA-13–QA-14 |
 | `fixtures/golden-dataset/` | 12 labeled investigation cases | QA-13 |

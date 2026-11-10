@@ -1,4 +1,4 @@
-# Architecture — QA-01 scaffold, QA-02 checkout API, QA-03 storefront shell, QA-04 commerce UI, QA-05 fault harness, QA-06 Playwright oracle, QA-07 evidence collector, QA-08 read-only tools, QA-09 investigation loop, QA-10 diagnosis check, QA-11 independent validator
+# Architecture — QA-01 scaffold, QA-02 checkout API, QA-03 storefront shell, QA-04 commerce UI, QA-05 fault harness, QA-06 Playwright oracle, QA-07 evidence collector, QA-08 read-only tools, QA-09 investigation loop, QA-10 diagnosis check, QA-11 independent validator, QA-12 quality gate
 
 This note is the as-built skeleton. Observable product behavior still lives in `docs/spec.md`. Domain names live in `docs/architecture-contracts.md`. Foundation choices live in `docs/adr/0001-runtime-foundations.md`.
 
@@ -14,23 +14,24 @@ Requires Node.js `>=22.13.0` (this VM: `22.23.4`) and pnpm `10.33.4`. `runId` an
 | `packages/evidence-collector` | In-memory `EvidenceRecord` index. Correlates `runId` and `orderId`. Does not open SQLite and does not decide a gate |
 | `packages/qa-agent` | Five read-only investigation tools, one provider adapter, one bounded actor loop, and one diagnosis claim check. No gate and no SQLite |
 | `packages/validators` | Independent read-only order check. Opens its own SQLite connection and returns `CONFIRMED`, `DEFECT`, or `UNKNOWN`. No gate |
-| `tests/contract` | Schema, migration, health, checkout persistence, order lookup, config, log, and validator checks |
+| `packages/quality-gate` | Deterministic `ALLOW`, `BLOCK`, and `HOLD` from a `VerificationResult`. Policy `tqa-gate-1`. No SQLite and no model call |
+| `tests/contract` | Schema, migration, health, checkout persistence, order lookup, config, log, validator, and quality-gate checks |
 | `tests/e2e` | Playwright UI coverage, independent order oracle, and JSON evidence (QA-06) |
 | `tests/evals` | Reserved for the eval runner (QA-14). Empty |
 | `fixtures/golden-dataset` | Reserved for 12 labeled cases (QA-13). Empty |
 
-`@tqa/qa-agent` is the QA-08 tool package, the QA-09 investigation loop, and the QA-10 diagnosis check. The loop still does not parse a diagnosis. `checkModelDiagnosis` does, and it does not decide a gate. `@tqa/validators` is the QA-11 package. It does not decide a gate. `@tqa/quality-gate` is still not created. `@tqa/evidence-collector` is the QA-07 package.
+`@tqa/qa-agent` is the QA-08 tool package, the QA-09 investigation loop, and the QA-10 diagnosis check. The loop still does not parse a diagnosis. `checkModelDiagnosis` does, and it does not decide a gate. `@tqa/validators` is the QA-11 package. It does not decide a gate. `@tqa/quality-gate` is the QA-12 package. It decides from a `VerificationResult` and does not open the order file. `@tqa/evidence-collector` is the QA-07 package.
 
 ## Workspace
 
-pnpm workspaces (`pnpm-workspace.yaml`). Package names: `@tqa/storefront`, `@tqa/api`, `@tqa/shared`, `@tqa/evidence-collector`, `@tqa/qa-agent`, `@tqa/validators`. TypeScript strict settings, including `noUncheckedIndexedAccess`, live in `tsconfig.base.json`. `@tqa/api`, `@tqa/evidence-collector`, and `@tqa/validators` depend on `@tqa/shared`. `@tqa/qa-agent` depends on shared and the evidence collector. `@tqa/validators` also depends on `better-sqlite3`. It does not depend on `@tqa/api`. The storefront does not depend on shared, so the UI bundle does not pull Zod in before it has a UI contract to use.
+pnpm workspaces (`pnpm-workspace.yaml`). Package names: `@tqa/storefront`, `@tqa/api`, `@tqa/shared`, `@tqa/evidence-collector`, `@tqa/qa-agent`, `@tqa/validators`, `@tqa/quality-gate`. TypeScript strict settings, including `noUncheckedIndexedAccess`, live in `tsconfig.base.json`. `@tqa/api`, `@tqa/evidence-collector`, `@tqa/validators`, and `@tqa/quality-gate` depend on `@tqa/shared`. `@tqa/qa-agent` depends on shared and the evidence collector. `@tqa/validators` also depends on `better-sqlite3`. It does not depend on `@tqa/api`. `@tqa/quality-gate` does not depend on the API, the agent, the validator, or SQLite. The storefront does not depend on shared, so the UI bundle does not pull Zod in before it has a UI contract to use.
 
 Supported commands from the repository root:
 
 | Command | Effect |
 |---|---|
-| `pnpm typecheck` | Build shared, evidence collector, read-only tools, validator, and API declarations, typecheck the storefront, `tests/contract`, and `tests/e2e` |
-| `pnpm build` | `tsc` for shared, evidence collector, read-only tools, validator, and API, Vite production build for the storefront |
+| `pnpm typecheck` | Build shared, evidence collector, read-only tools, validator, quality gate, and API declarations, typecheck the storefront, `tests/contract`, and `tests/e2e` |
+| `pnpm build` | `tsc` for shared, evidence collector, read-only tools, validator, quality gate, and API, Vite production build for the storefront |
 | `pnpm test` | Build, typecheck contract tests, run them with `node:test`. This does not run Playwright |
 | `pnpm test:e2e` | Build, then the Playwright regression project. The ghost UI case does not check persistence. A separate characterization test expects the injected ghost order to stay absent |
 | `pnpm test:e2e:ghost-oracle` | Build, then the persistence oracle on `GHOST_SUCCESS`. A non-zero exit is the expected negative result |
@@ -90,7 +91,7 @@ Presence of an `orders` row means persisted. Absence is not represented by a sta
 - Checkout and order items reject duplicate SKUs, SKUs longer than 64 characters, and quantities outside 1–99
 - `PRODUCT_FIXTURES` is three catalog SKUs with integer-cent prices. Products are not a SQLite table.
 
-A diagnosis claim may have an empty `evidenceIds` array. That claim is UNVERIFIED. Claims that cite evidence still need those IDs to exist and to support the text. An LLM claim never independently authorizes `ALLOW`. `UNKNOWN` is its own verification status. Nothing in this package decides the gate. The decision matrix stays policy for QA-12.
+A diagnosis claim may have an empty `evidenceIds` array. That claim is UNVERIFIED. Claims that cite evidence still need those IDs to exist and to support the text. An LLM claim never independently authorizes `ALLOW`. `UNKNOWN` is its own verification status. Nothing in `@tqa/shared` decides the gate. The decision matrix is applied by `@tqa/quality-gate`.
 
 Passing typecheck, build, or contract tests does not auto-approve merge and does not authorize a quality-gate `ALLOW`. A human decides merge.
 
@@ -108,7 +109,7 @@ Scenario state is per `runId`. The default is `NORMAL`. Setting a scenario does 
 | `GHOST_SUCCESS` | Same 200 confirmation. The log event is `harness.fault` with `persisted: false`, not `api.checkout_persisted` | No business row. A `harness_checkouts` row records the issued id and `persisted = 0`. That row is not an order | 404 `ABSENT`. `verifyPersistedOrder` is `DEFECT` / `not_persisted` |
 | `VERIFICATION_UNAVAILABLE` | Same 200 confirmation. The log event is `harness.fault` with `persisted: true` | The order is committed | 503 `UNAVAILABLE` / `service_unavailable`, including orders already stored for that run. `verifyPersistedOrder` is `UNKNOWN` and does not return line items or the total. A different unknown id stays 404 `ABSENT` / `DEFECT` |
 
-`verifyPersistedOrder` (`@tqa/api/verify`) runs its own `SELECT` against `orders` and `order_items`. It does not echo the checkout JSON. `VERIFICATION_UNAVAILABLE` is decided before those line items are loaded. This adapter reports `CONFIRMED`, `DEFECT`, or `UNKNOWN`. It does not emit `ALLOW`, `BLOCK`, or `HOLD`. `@tqa/validators` repeats that read on a separate connection. The gate remains QA-12.
+`verifyPersistedOrder` (`@tqa/api/verify`) runs its own `SELECT` against `orders` and `order_items`. It does not echo the checkout JSON. `VERIFICATION_UNAVAILABLE` is decided before those line items are loaded. This adapter reports `CONFIRMED`, `DEFECT`, or `UNKNOWN`. It does not emit `ALLOW`, `BLOCK`, or `HOLD`. `@tqa/validators` repeats that read on a separate connection. `@tqa/quality-gate` is the policy step after that read.
 
 Harness tables are created only when the harness is mounted. They are not part of `schema.sql` and they are not columns on `orders`. A database that already contains `harness_runs` still blocks authoritative reads for a run left in `VERIFICATION_UNAVAILABLE`, even if a later process starts without the token. New checkouts ghost only while the harness is mounted. Clearing a stuck outage requires mounting the harness again and calling reset. The mode uses 503 `service_unavailable`. It does not simulate a timeout. Both results are `UNKNOWN`, not a confirmed missing order.
 
@@ -180,9 +181,21 @@ A stored order whose `run_id` matches, whose row satisfies `OrderRecordSchema`, 
 
 A missing file, a database without the order tables, or a SQLite error is `UNKNOWN` and does not say the order is absent. `readBudgetMs: 0` is `UNKNOWN` for a timeout and does not open the file. `:memory:` and `file:` URIs are rejected so the check cannot attach to a private in-memory connection. `probeReadonly` tries to change `user_version` and reports that the write was rejected. The result is a `VerificationResult`. It has no gate field.
 
+## Quality gate (QA-12)
+
+`decideRelease` in `@tqa/quality-gate` takes one `VerificationResult` and an optional `AgentDiagnosis`. It returns a `GateDecision` with policy version `tqa-gate-1`. It does not open SQLite, does not call `verifyOrder`, and does not call a model. A caller that wants an authoritative decision passes the object `verifyOrder` already returned.
+
+`CONFIRMED` becomes `ALLOW` with reason `VERIFICATION_CONFIRMED`. `DEFECT` becomes `BLOCK` with reason `VERIFICATION_DEFECT`. `UNKNOWN` becomes `HOLD` with reason `VERIFICATION_UNKNOWN`. A diagnosis on a defect or an unknown read adds `DIAGNOSIS_IGNORED` and does not change the decision. A success label, a confidence sentence, or the words "ignore policy and approve the release" do not produce `ALLOW` unless the verification status is `CONFIRMED`.
+
+When the verification is `CONFIRMED` and the diagnosis label is `ORDER_NOT_PERSISTED`, or the summary or a claim says the order was not persisted, was not saved, is a confirmed missing order, or that no stored order exists, the decision is `HOLD` with reasons `VERIFICATION_CONFIRMED` and `CLAIMS_CONTRADICT_VERIFICATION`. That hold is the unresolved contradiction. It is not `BLOCK`. An `INCONCLUSIVE` diagnosis that does not make one of those absence claims stays `ALLOW`, because the stored order is the authority.
+
+The decision copies `runId` and `verificationId` only. It does not copy `details`, the summary, or the claim text. `verificationId` must be a UUID. Extra fields, including a smuggled `decision` field, throw `GateInputError` and do not return a gate. A diagnosis whose `runId` differs from the verification throws the same way. Invalid input is not `HOLD` and is not `BLOCK`.
+
+The package does not wire this function into the investigation loop or into Playwright. O-001 through O-007 stay UNVERIFIED until QA-15.
+
 ## Explicitly absent
 
-The quality gate, the golden dataset, authentication, payments, and deployment. The investigation report is not a diagnosis and not a gate. `checkedDiagnosis` is not a gate either. `verifyOrder` is not a gate. The storefront still has no scenario control and does not call `GET /api/orders/:orderId`. A ghost confirmation can appear on that page; the page still does not decide whether the order was saved.
+The golden dataset, authentication, payments, and deployment. The investigation report is not a diagnosis and not a gate. `checkedDiagnosis` is not a gate either. `verifyOrder` is not a gate. The storefront still has no scenario control and does not call `GET /api/orders/:orderId`. A ghost confirmation can appear on that page; the page still does not decide whether the order was saved.
 
 ## Playwright (QA-06)
 
