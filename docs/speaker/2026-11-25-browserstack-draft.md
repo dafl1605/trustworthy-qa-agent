@@ -38,6 +38,10 @@ Suggested shape, still unsent:
 
 Do not add a personal photograph to this public repository. The speaker keeps the image outside the repo and attaches it only in the meetup form, after reviewing this draft. This task does not include an image file.
 
+## Slides
+
+A 14-slide English draft lives in [`slides.md`](slides.md). It cites the captures in [`captures/`](captures/) and the measured baseline. It is not a rehearsal, it does not identify a backup recording, and it is not sent. S-008 remains incomplete.
+
 ## Sending checklist
 
 - [ ] A human replaced every placeholder with facts they are willing to publish.

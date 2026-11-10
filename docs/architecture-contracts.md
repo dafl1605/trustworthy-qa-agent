@@ -8,7 +8,7 @@
 - `packages/qa-agent`: single read-only LLM investigator and provider adapter.
 - `packages/validators`: authoritative read-only checks.
 - `packages/quality-gate`: policy-versioned ALLOW/BLOCK/HOLD.
-- `tests/e2e`, `tests/evals`, `fixtures/golden-dataset`, `docs/progress`.
+- `tests/e2e`, `tests/evals`, `fixtures/golden-dataset`, `docs/speaker`, `docs/progress`.
 
 ## Baseline HTTP API
 - `GET /health` (health status)
@@ -78,5 +78,7 @@ A claim with empty `evidenceIds` is UNVERIFIED. Claims that cite evidence still 
 Do **not** mistake `UNKNOWN` for `DEFECT`. Agent accuracy is evaluated separately from gate correctness. A passing test suite does not auto-approve a release or a quality-gate `ALLOW`.
 
 `@tqa/quality-gate` applies that matrix to a `VerificationResult`. A supplied diagnosis cannot turn `DEFECT` into `ALLOW` or `UNKNOWN` into `BLOCK`. Text inside the diagnosis or the verification details is untrusted and is not copied into the decision. When the verification is `CONFIRMED` and the diagnosis label is `ORDER_NOT_PERSISTED`, or a claim says the order was not persisted, the decision is `HOLD` until that claim is reconciled. That `HOLD` is not a `DEFECT`. Policy version `tqa-gate-1` is fixed in the package. The function does not open SQLite and does not call a model.
+
+`docs/speaker/slides.md` is the QA-16 draft deck. It cites the captures in `docs/speaker/captures/` and the freeze below. A slide is not a gate decision, and the deck does not identify a backup recording. S-008 stays incomplete until a timed rehearsal and that recording exist.
 
 `fixtures/regression-baseline/baseline.json` is the QA-15 functional freeze of five measured `pnpm test:e2e` runs and five measured `pnpm test:e2e:ghost-oracle` runs. The file stores each sanitized run. A green regression run is not `ALLOW`. The ghost oracle stays an unexpected failure: the assertion still expects 200, the observed read is not stored as a pass, and the stored lookup status has to be 404. A 503 or a timeout is not frozen as a missing order. The file is not a gate decision and not a model score. `tests/e2e/regression-baseline.ts` does not launch a browser. It only accepts reports a caller already produced.
