@@ -29,6 +29,8 @@ After **QA-10**, `checkModelDiagnosis` parses one diagnosis with the shared Zod 
 
 After **QA-11**, `@tqa/validators` reads the order file on its own read-only connection. A normal stored order whose line items match the total is `CONFIRMED`. A ghost checkout with no `orders` row is `DEFECT`. A run in `VERIFICATION_UNAVAILABLE`, a missing file, or a read budget of 0 is `UNKNOWN` and is not reported as a missing order. A model diagnosis passed into `verifyOrder` does not change that status. The package does not emit `ALLOW`, `BLOCK`, or `HOLD`.
 
+After **QA-12**, `@tqa/quality-gate` maps that result with policy `tqa-gate-1`. `CONFIRMED` is `ALLOW`, `DEFECT` is `BLOCK`, and `UNKNOWN` is `HOLD`. A model diagnosis cannot turn a ghost order into `ALLOW` or a 503 into `BLOCK`. Text that says to ignore policy and approve the release is not copied into the decision and does not authorize `ALLOW`. A confirmed order whose diagnosis says the order was not persisted is `HOLD` until that claim is reconciled. The package does not open SQLite and does not call a model.
+
 ## Requirements
 
 - Node.js `>=22.13.0` (verified on `22.23.4`)

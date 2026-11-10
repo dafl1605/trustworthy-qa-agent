@@ -64,7 +64,7 @@ interface EvalCase {
 ```
 Define full runtime validation schemas in code, not only TypeScript interfaces. Order total is computed in server-side integer cents; `runId` and `orderId` are UUIDs. Checkout and persisted line items are 1–3 unique SKUs, each SKU at most 64 characters, quantity 1–99.
 
-`VerificationResult` and `EvalCase` were contract-only in QA-01. QA-11 returns `VerificationResult` from its own read-only SQLite connection. QA-12 still owns the gate. Eval fixtures and the runner remain QA-13/QA-14. Do not treat `EvalCase` as a running eval, and do not treat a validator status as a gate decision.
+`VerificationResult` and `EvalCase` were contract-only in QA-01. QA-11 returns `VerificationResult` from its own read-only SQLite connection. QA-12 returns `GateDecision` from `@tqa/quality-gate` policy `tqa-gate-1`. Eval fixtures and the runner remain QA-13/QA-14. Do not treat `EvalCase` as a running eval. A validator status is an input to the gate. It is not, by itself, the decision object.
 
 A claim with empty `evidenceIds` is UNVERIFIED. Claims that cite evidence still need those IDs to exist and to support the text. An LLM claim never independently authorizes `ALLOW`.
 
@@ -76,3 +76,5 @@ A claim with empty `evidenceIds` is UNVERIFIED. Claims that cite evidence still 
 | Query unavailable | Any | UNKNOWN | HOLD |
 
 Do **not** mistake `UNKNOWN` for `DEFECT`. Agent accuracy is evaluated separately from gate correctness. A passing test suite does not auto-approve a release or a quality-gate `ALLOW`.
+
+`@tqa/quality-gate` applies that matrix to a `VerificationResult`. A supplied diagnosis cannot turn `DEFECT` into `ALLOW` or `UNKNOWN` into `BLOCK`. Text inside the diagnosis or the verification details is untrusted and is not copied into the decision. When the verification is `CONFIRMED` and the diagnosis label is `ORDER_NOT_PERSISTED`, or a claim says the order was not persisted, the decision is `HOLD` until that claim is reconciled. That `HOLD` is not a `DEFECT`. Policy version `tqa-gate-1` is fixed in the package. The function does not open SQLite and does not call a model.
