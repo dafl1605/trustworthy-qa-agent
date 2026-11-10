@@ -27,6 +27,8 @@ After **QA-09**, the same package can run one bounded investigation. A scripted 
 
 After **QA-10**, `checkModelDiagnosis` parses one diagnosis with the shared Zod schema and compares each claim with the evidence index. An empty citation is `UNVERIFIED`. An unknown id, a 503, or a timeout is `UNKNOWN` and does not become a missing order. A UI pass by itself does not support `SUCCESS`. A cited 200 `FOUND` can keep `SUCCESS`, and a cited 404 `ABSENT` can keep `ORDER_NOT_PERSISTED`. The checked label is still not `ALLOW`, `BLOCK`, or `HOLD`. The investigation loop does not call this parser.
 
+After **QA-11**, `@tqa/validators` reads the order file on its own read-only connection. A normal stored order whose line items match the total is `CONFIRMED`. A ghost checkout with no `orders` row is `DEFECT`. A run in `VERIFICATION_UNAVAILABLE`, a missing file, or a read budget of 0 is `UNKNOWN` and is not reported as a missing order. A model diagnosis passed into `verifyOrder` does not change that status. The package does not emit `ALLOW`, `BLOCK`, or `HOLD`.
+
 ## Requirements
 
 - Node.js `>=22.13.0` (verified on `22.23.4`)

@@ -32,6 +32,9 @@ importers:
       '@tqa/shared':
         specifier: workspace:*
         version: link:packages/shared
+      '@tqa/validators':
+        specifier: workspace:*
+        version: link:packages/validators
       '@types/node':
         specifier: 'catalog:'
         version: 22.20.5
@@ -124,6 +127,25 @@ importers:
         specifier: 4.6.7
         version: 4.6.7
     devDependencies:
+      typescript:
+        specifier: 'catalog:'
+        version: 7.0.2
+
+  packages/validators:
+    dependencies:
+      '@tqa/shared':
+        specifier: workspace:*
+        version: link:../shared
+      better-sqlite3:
+        specifier: 13.0.3
+        version: 13.0.3
+    devDependencies:
+      '@types/better-sqlite3':
+        specifier: 9.6.0
+        version: 9.6.0
+      '@types/node':
+        specifier: 'catalog:'
+        version: 22.20.5
       typescript:
         specifier: 'catalog:'
         version: 7.0.2
