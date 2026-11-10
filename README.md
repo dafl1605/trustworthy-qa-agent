@@ -35,6 +35,8 @@ After **QA-13**, `fixtures/golden-dataset/cases.json` holds twelve human-authore
 
 After **QA-14**, `tests/evals/runner.ts` compares one supplied observation per label. The report counts classification, evidence coverage, abstention, critical-defect detection, and gate consistency separately. `scoreCheckedInStimuli` uses the scripted stimulus and asks policy `tqa-gate-1` for the gate. A scripted `SUCCESS` on a ghost case stays a diagnosis mismatch, and the gate stays `BLOCK`. A 503 or a timeout stays `UNKNOWN` / `HOLD`. The report says `measuredFromModel: false` and `modelInvoked: false` for that run. Twelve cases are not a reliability rate. The runner does not open SQLite and does not call a model.
 
+After **QA-15**, `fixtures/regression-baseline/baseline.json` freezes five measured `pnpm test:e2e` runs and five measured `pnpm test:e2e:ghost-oracle` runs. The file stores each run's statuses. Each regression run passed the same seven tests, including the limited `GHOST_SUCCESS` confirmation and the 503 oracle. Each ghost-oracle run exited 1, the stored lookup status is 404, and the assertion still expects 200. That failure stays the expected negative result. The freeze is not a release decision. O-001 through O-007 stay UNVERIFIED; `pnpm test` does not score them.
+
 ## Requirements
 
 - Node.js `>=22.13.0` (verified on `22.23.4`)

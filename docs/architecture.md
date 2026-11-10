@@ -191,7 +191,7 @@ When the verification is `CONFIRMED` and the diagnosis label is `ORDER_NOT_PERSI
 
 The decision copies `runId` and `verificationId` only. It does not copy `details`, the summary, or the claim text. `verificationId` must be a UUID. Extra fields, including a smuggled `decision` field, throw `GateInputError` and do not return a gate. A diagnosis whose `runId` differs from the verification throws the same way. Invalid input is not `HOLD` and is not `BLOCK`.
 
-The package does not wire this function into the investigation loop or into Playwright. O-001 through O-007 stay UNVERIFIED until QA-15.
+The package does not wire this function into the investigation loop or into Playwright. O-001 through O-007 stay UNVERIFIED. The QA-15 session recorded that score in `docs/orchestrator-eval-probes.md`. `pnpm test` does not score those probes.
 
 ## Golden dataset (QA-13)
 
@@ -209,7 +209,7 @@ The report version is `tqa-eval-report-1`. It lists every case and counts classi
 
 `scoreCheckedInStimuli` loads `tqa-golden-v1` and builds observations from `authoritativeLookup` and `scriptedCandidateDiagnosis`. `FOUND` is `CONFIRMED`, `ABSENT` is `DEFECT`, and `UNAVAILABLE_503`, `UNAVAILABLE_TIMEOUT`, and `TOOL_TIMEOUT` are `UNKNOWN`. The gate is the policy decision, not a copy of `expectedGate`. `GD-GHOST-03` cites `ev-fabricated`, which is not resolved. The other stimuli name no evidence id. `measuredFromModel` is true only when every supplied source is `live-model`. `modelInvoked` and `authorityExecuted` stay false, because this function does not call a provider and does not open SQLite. `generalizes` stays false. The limitation says n=12 is not a reliability rate.
 
-The loader stays in `tests/contract/golden-dataset.ts`. The runner imports it. O-001 through O-007 stay UNVERIFIED until QA-15.
+The loader stays in `tests/contract/golden-dataset.ts`. The runner imports it. O-001 through O-007 stay UNVERIFIED. The QA-15 session recorded that score in `docs/orchestrator-eval-probes.md`. `pnpm test` does not score those probes.
 
 ## Explicitly absent
 
@@ -223,7 +223,13 @@ The limited UI tests assert the confirmation heading and the text `Order confirm
 
 The NORMAL oracle requires 200 `FOUND`, the same `runId`, and the catalog total for one mug. The unavailable test requires 503 `UNAVAILABLE` / `service_unavailable` and records `UNKNOWN`. It asserts the status is not 404. The ghost oracle uses the same 200 persistence expectation as NORMAL. On `GHOST_SUCCESS` that expectation fails, the evidence records 404 `ABSENT` / `DEFECT`, and the Playwright project `expected-negative` exits non-zero. `pnpm test` and `pnpm test:e2e` do not include that project. `pnpm test:e2e` does include `fault-ghost-characterization.spec.ts`, which expects 404 `ABSENT` as a control that the injected absence is still there. A green result on that control is not the oracle passing.
 
-Five consecutive NORMAL browser checkouts in `repeatability.spec.ts` keep distinct `runId` and `orderId` values, confirm each row, and reset each run twice. Traces, screenshots, and `playwright-report.json` are written under the repository `test-results/` directory. Traces and screenshots are kept for passing tests only when `TQA_E2E_DEMO=1`. Ordinary regression retains traces on failure. JSON files under `test-results/evidence/` are still written by the QA-06 helper. They are not produced by `@tqa/evidence-collector`, and they are not a gate decision. The collector can normalize that JSON shape when a caller passes it in. Playwright is not wired to the package.
+Five consecutive NORMAL browser checkouts in `repeatability.spec.ts` keep distinct `runId` and `orderId` values, confirm each row, and reset each run twice. That test is one case inside a regression run. It is not, by itself, five executions of the regression project. Traces, screenshots, and `playwright-report.json` are written under the repository `test-results/` directory. Traces and screenshots are kept for passing tests only when `TQA_E2E_DEMO=1`. Ordinary regression retains traces on failure. JSON files under `test-results/evidence/` are still written by the QA-06 helper. They are not produced by `@tqa/evidence-collector`, and they are not a gate decision. The collector can normalize that JSON shape when a caller passes it in. Playwright is not wired to the package.
+
+## Regression baseline (QA-15)
+
+`tests/e2e/regression-baseline.ts` turns a Playwright JSON report into a list of file names, titles, and statuses. It keeps the spec file's base name and drops the rest of the path. It does not copy error text, order ids, or log lines. `freezeFunctionalBaseline` accepts that list only when there are five `pnpm test:e2e` runs and five `pnpm test:e2e:ghost-oracle` runs, the start timestamps are all different, and every regression test is the same passing inventory: the three limited UI checks, the NORMAL oracle, the 503 oracle, the ghost absence control, and the five-checkout repeatability test.
+
+The ghost oracle has to stay an unexpected failure. The test is still written to expect a pass, the observed status is `failed`, and the process exit is 1. Each ghost-oracle observation also stores the HTTP status read from that report, and the freeze accepts only 404. A 503 or a timeout is not stored as a missing order. A run that passes, or a run whose expected status was changed to `failed` so Playwright can exit 0, is not frozen. A 503 oracle that fails is not frozen and is not relabeled as a missing order. One miss among five otherwise green runs is flaky and is not frozen. The committed file is `fixtures/regression-baseline/baseline.json`. It stores each sanitized run, including the spec base name, title, project, and statuses. `loadMeasuredBaseline` parses those runs and requires the bytes to match the canonical freeze. It does not fill in a passing status that the file omitted. The module does not spawn a browser. Five local runs are not a release decision and not a flakiness rate for another machine.
 
 ## Storefront shell (QA-03) and commerce UI (QA-04)
 
