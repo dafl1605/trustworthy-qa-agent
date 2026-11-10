@@ -1,4 +1,4 @@
-# Architecture — QA-01 scaffold, QA-02 checkout API, QA-03 storefront shell, QA-04 commerce UI, QA-05 fault harness, QA-06 Playwright oracle, QA-07 evidence collector, QA-08 read-only tools, QA-09 investigation loop, QA-10 diagnosis check, QA-11 independent validator, QA-12 quality gate, QA-13 golden dataset
+# Architecture — QA-01 scaffold, QA-02 checkout API, QA-03 storefront shell, QA-04 commerce UI, QA-05 fault harness, QA-06 Playwright oracle, QA-07 evidence collector, QA-08 read-only tools, QA-09 investigation loop, QA-10 diagnosis check, QA-11 independent validator, QA-12 quality gate, QA-13 golden dataset, QA-14 eval runner
 
 This note is the as-built skeleton. Observable product behavior still lives in `docs/spec.md`. Domain names live in `docs/architecture-contracts.md`. Foundation choices live in `docs/adr/0001-runtime-foundations.md`.
 
@@ -17,8 +17,8 @@ Requires Node.js `>=22.13.0` (this VM: `22.23.4`) and pnpm `10.33.4`. `runId` an
 | `packages/quality-gate` | Deterministic `ALLOW`, `BLOCK`, and `HOLD` from a `VerificationResult`. Policy `tqa-gate-1`. No SQLite and no model call |
 | `tests/contract` | Schema, migration, health, checkout persistence, order lookup, config, log, validator, and quality-gate checks |
 | `tests/e2e` | Playwright UI coverage, independent order oracle, and JSON evidence (QA-06) |
-| `tests/evals` | Reserved for the eval runner (QA-14). Empty |
-| `fixtures/golden-dataset` | Twelve human-authored labels in `cases.json` (QA-13). Not a model score and not a runner |
+| `tests/evals` | Scores supplied observations against the twelve golden labels. Does not call a model and does not open SQLite |
+| `fixtures/golden-dataset` | Twelve human-authored labels in `cases.json` (QA-13). Not a model score |
 
 `@tqa/qa-agent` is the QA-08 tool package, the QA-09 investigation loop, and the QA-10 diagnosis check. The loop still does not parse a diagnosis. `checkModelDiagnosis` does, and it does not decide a gate. `@tqa/validators` is the QA-11 package. It does not decide a gate. `@tqa/quality-gate` is the QA-12 package. It decides from a `VerificationResult` and does not open the order file. `@tqa/evidence-collector` is the QA-07 package.
 
@@ -30,9 +30,9 @@ Supported commands from the repository root:
 
 | Command | Effect |
 |---|---|
-| `pnpm typecheck` | Build shared, evidence collector, read-only tools, validator, quality gate, and API declarations, typecheck the storefront, `tests/contract`, and `tests/e2e` |
+| `pnpm typecheck` | Build shared, evidence collector, read-only tools, validator, quality gate, and API declarations, typecheck the storefront, `tests/contract`, `tests/evals`, and `tests/e2e` |
 | `pnpm build` | `tsc` for shared, evidence collector, read-only tools, validator, quality gate, and API, Vite production build for the storefront |
-| `pnpm test` | Build, typecheck contract tests, run them with `node:test`. This does not run Playwright |
+| `pnpm test` | Build, typecheck contract and eval tests, run them and the node tests under `tests/e2e` with `node:test`. This does not run Playwright |
 | `pnpm test:e2e` | Build, then the Playwright regression project. The ghost UI case does not check persistence. A separate characterization test expects the injected ghost order to stay absent |
 | `pnpm test:e2e:ghost-oracle` | Build, then the persistence oracle on `GHOST_SUCCESS`. A non-zero exit is the expected negative result |
 | `pnpm demo:false-pass` | Replays the limited ghost UI and five failing oracle lookups. Exit 0 means the false PASS was reproduced |
@@ -199,11 +199,21 @@ The package does not wire this function into the investigation loop or into Play
 
 Every stimulus keeps a passing screen. The screen is not the label. A scripted candidate that says `SUCCESS` on a ghost case does not change `BLOCK`. A scripted candidate that treats a 503 as a missing order does not change `HOLD`. `UNAVAILABLE_TIMEOUT` and `TOOL_TIMEOUT` stay distinct from `ABSENT`. `candidateSource` is `scripted-fixture` or `none`. Neither is a live model result. The loader does not import the gate, the validator, or the agent, and it does not open SQLite.
 
-The QA-12 contradiction, a `CONFIRMED` result with an `ORDER_NOT_PERSISTED` diagnosis, stays out of this file. That `HOLD` is gate policy. It is not an `EvalCase`. The runner and any count produced by running a model remain QA-14.
+The QA-12 contradiction, a `CONFIRMED` result with an `ORDER_NOT_PERSISTED` diagnosis, stays out of this file. That `HOLD` is gate policy. It is not an `EvalCase`.
+
+## Eval runner (QA-14)
+
+`scoreEval` in `tests/evals/runner.ts` takes the parsed golden dataset and one observation per case. An observation has a diagnosis or a null abstention, cited evidence ids, the subset of those ids the caller resolved, a verification status, and a gate. The passing screen is not a field. Distractor text is not read and is not copied into the report.
+
+The report version is `tqa-eval-report-1`. It lists every case and counts classification, evidence coverage, abstention, critical-defect detection, verification match, gate match, and gate consistency. Classification compares the diagnosis with the label. Gate match compares the supplied gate with the label. Gate consistency asks `decideRelease` whether that same gate follows policy `tqa-gate-1`. A `claimsAbsence` flag sends the fixed phrase `order was not persisted` into that policy call. The report does not copy caller text. Those counts stay separate. A null diagnosis is `abstained`, not a match for `INCONCLUSIVE`. Abstaining on `VERIFICATION_UNAVAILABLE` is appropriate. Abstaining on `NORMAL` or `GHOST_SUCCESS` is not. A ghost diagnosis of `ORDER_NOT_PERSISTED` is a detected critical defect. Any other ghost diagnosis, including abstention, is missed. An empty citation or an unresolved id is uncovered. Abstention is not an evidence miss.
+
+`scoreCheckedInStimuli` loads `tqa-golden-v1` and builds observations from `authoritativeLookup` and `scriptedCandidateDiagnosis`. `FOUND` is `CONFIRMED`, `ABSENT` is `DEFECT`, and `UNAVAILABLE_503`, `UNAVAILABLE_TIMEOUT`, and `TOOL_TIMEOUT` are `UNKNOWN`. The gate is the policy decision, not a copy of `expectedGate`. `GD-GHOST-03` cites `ev-fabricated`, which is not resolved. The other stimuli name no evidence id. `measuredFromModel` is true only when every supplied source is `live-model`. `modelInvoked` and `authorityExecuted` stay false, because this function does not call a provider and does not open SQLite. `generalizes` stays false. The limitation says n=12 is not a reliability rate.
+
+The loader stays in `tests/contract/golden-dataset.ts`. The runner imports it. O-001 through O-007 stay UNVERIFIED until QA-15.
 
 ## Explicitly absent
 
-The eval runner, authentication, payments, and deployment. The investigation report is not a diagnosis and not a gate. `checkedDiagnosis` is not a gate either. `verifyOrder` is not a gate. The golden dataset is not a gate and not a measured accuracy report. The storefront still has no scenario control and does not call `GET /api/orders/:orderId`. A ghost confirmation can appear on that page; the page still does not decide whether the order was saved.
+Authentication, payments, and deployment. The investigation report is not a diagnosis and not a gate. `checkedDiagnosis` is not a gate either. `verifyOrder` is not a gate. The golden dataset is not a gate and not a measured accuracy report. The eval report is not a release decision. The storefront still has no scenario control and does not call `GET /api/orders/:orderId`. A ghost confirmation can appear on that page; the page still does not decide whether the order was saved.
 
 ## Playwright (QA-06)
 

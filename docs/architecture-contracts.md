@@ -64,7 +64,7 @@ interface EvalCase {
 ```
 Define full runtime validation schemas in code, not only TypeScript interfaces. Order total is computed in server-side integer cents; `runId` and `orderId` are UUIDs. Checkout and persisted line items are 1–3 unique SKUs, each SKU at most 64 characters, quantity 1–99.
 
-`VerificationResult` and `EvalCase` were contract-only in QA-01. QA-11 returns `VerificationResult` from its own read-only SQLite connection. QA-12 returns `GateDecision` from `@tqa/quality-gate` policy `tqa-gate-1`. QA-13 stores twelve `EvalCase` labels in `fixtures/golden-dataset/cases.json`. Those labels follow the matrix below and record human provenance. They are not a model score. The runner remains QA-14. Do not treat `EvalCase` as a running eval. A validator status is an input to the gate. It is not, by itself, the decision object.
+`VerificationResult` and `EvalCase` were contract-only in QA-01. QA-11 returns `VerificationResult` from its own read-only SQLite connection. QA-12 returns `GateDecision` from `@tqa/quality-gate` policy `tqa-gate-1`. QA-13 stores twelve `EvalCase` labels in `fixtures/golden-dataset/cases.json`. Those labels follow the matrix below and record human provenance. They are not a model score. QA-14 compares supplied observations with those labels and reports raw counts. That report is not a reliability rate, and a scripted stimulus is not a live model result. Do not treat `EvalCase` itself as a measured run. A validator status is an input to the gate. It is not, by itself, the decision object.
 
 A claim with empty `evidenceIds` is UNVERIFIED. Claims that cite evidence still need those IDs to exist and to support the text. An LLM claim never independently authorizes `ALLOW`.
 
