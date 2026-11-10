@@ -1,7 +1,7 @@
 # Implementation plan — QA-13
 
 Task ID: QA-13  
-Spec IDs: S-006 for the twelve labeled cases. S-001, S-002, and S-003 name the three rows those labels copy. S-004 names the two cases whose scripted candidate cites a claim the label does not adopt.  
+Spec IDs: S-006 for the twelve labeled cases. S-001, S-002, and S-003 name the three rows those labels copy. S-004 names the three cases whose scripted candidate is not adopted: `GD-GHOST-03`, `GD-GHOST-04`, and `GD-UNKNOWN-03`.  
 Status: ACCEPTED for implementation inside the approved sprint task. QA-01 through QA-12 are merged on `main` at `c6663f1d011d29927d8f9a543c4df0a73e996cb4`. No open PR covers QA-13. This plan does not change fault meanings, `EvalCaseSchema`, the validator, the gate, or the 54 h + 9 h baseline. It adds the labeled dataset the sprint already named. Merge still requires a human. Status after the PR is `IN_REVIEW`, not `DONE`.
 
 ## Task pack

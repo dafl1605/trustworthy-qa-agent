@@ -333,6 +333,16 @@ export function parseGoldenDataset(raw: unknown): GoldenDataset {
       fail(`golden dataset is missing ${caseId}`);
     }
   }
+  for (const entry of cases) {
+    const candidate = entry.stimulus.scriptedCandidateDiagnosis;
+    if (
+      candidate !== null &&
+      candidate !== entry.expectedDiagnosis &&
+      !entry.specIds.includes('S-004')
+    ) {
+      fail(`${entry.caseId} specIds must include S-004 when the scripted candidate is not adopted`);
+    }
+  }
   return {
     datasetId: DATASET_ID,
     labelProvenance: readProvenance(raw.labelProvenance),

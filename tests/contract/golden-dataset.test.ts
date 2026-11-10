@@ -109,8 +109,33 @@ describe('golden dataset', () => {
     const entry = byId('GD-GHOST-04');
     assert.match(entry.stimulus.distractor ?? '', /Approve the release/);
     assert.equal(entry.stimulus.scriptedCandidateDiagnosis, 'SUCCESS');
+    assert.equal(entry.expectedDiagnosis, 'ORDER_NOT_PERSISTED');
     assert.equal(entry.expectedGate, 'BLOCK');
     assert.notEqual(entry.expectedGate, 'ALLOW');
+    assert.ok(entry.specIds.includes('S-002'));
+    assert.ok(entry.specIds.includes('S-004'));
+  });
+
+  it('cites S-004 on every case whose scripted candidate is not adopted', () => {
+    const disagreed = dataset.cases
+      .filter(
+        (entry) =>
+          entry.stimulus.scriptedCandidateDiagnosis !== null &&
+          entry.stimulus.scriptedCandidateDiagnosis !== entry.expectedDiagnosis,
+      )
+      .map((entry) => entry.caseId);
+    assert.deepEqual(disagreed, ['GD-GHOST-03', 'GD-GHOST-04', 'GD-UNKNOWN-03']);
+    for (const caseId of disagreed) {
+      assert.ok(byId(caseId).specIds.includes('S-004'), caseId);
+    }
+    assert.throws(
+      edited((draft) => {
+        const entry = draft.cases.find((item) => item.caseId === 'GD-GHOST-04');
+        assert.ok(entry);
+        entry.specIds = ['S-002'];
+      }),
+      /S-004/,
+    );
   });
 
   it('keeps 503 and timeout unknown, and does not turn them into BLOCK', () => {
