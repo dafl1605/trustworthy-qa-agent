@@ -64,7 +64,7 @@ interface EvalCase {
 ```
 Define full runtime validation schemas in code, not only TypeScript interfaces. Order total is computed in server-side integer cents; `runId` and `orderId` are UUIDs. Checkout and persisted line items are 1–3 unique SKUs, each SKU at most 64 characters, quantity 1–99.
 
-`VerificationResult` and `EvalCase` are contract-only in QA-01. Validator behavior is QA-11/QA-12. Eval fixtures and the runner are QA-13/QA-14. Do not treat these schemas as a running validator or eval.
+`VerificationResult` and `EvalCase` were contract-only in QA-01. QA-11 returns `VerificationResult` from its own read-only SQLite connection. QA-12 still owns the gate. Eval fixtures and the runner remain QA-13/QA-14. Do not treat `EvalCase` as a running eval, and do not treat a validator status as a gate decision.
 
 A claim with empty `evidenceIds` is UNVERIFIED. Claims that cite evidence still need those IDs to exist and to support the text. An LLM claim never independently authorizes `ALLOW`.
 

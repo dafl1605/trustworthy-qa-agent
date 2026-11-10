@@ -142,8 +142,9 @@ export const OrderLookupResultSchema = z.discriminatedUnion('code', [
 ]);
 
 /**
- * Independent validator output. Runtime evaluation is QA-11.
+ * Independent validator output. The read-only runtime is `@tqa/validators`.
  * ALLOW may follow only from CONFIRMED here, never from an LLM claim alone.
+ * This schema does not itself emit a gate decision.
  */
 export const VerificationResultSchema = z.object({
   verificationId: z.string().min(1),

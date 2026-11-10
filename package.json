@@ -9,8 +9,8 @@
     "pnpm": ">=10.33.4"
   },
   "scripts": {
-    "build": "pnpm --filter @tqa/shared build && pnpm --filter @tqa/evidence-collector build && pnpm --filter @tqa/qa-agent build && pnpm --filter @tqa/api build && pnpm --filter @tqa/storefront build",
-    "typecheck": "pnpm --filter @tqa/shared build && pnpm --filter @tqa/evidence-collector build && pnpm --filter @tqa/qa-agent build && pnpm --filter @tqa/api build && pnpm --filter @tqa/storefront typecheck && tsc -p tests/tsconfig.json --noEmit && tsc -p tests/e2e/tsconfig.json --noEmit",
+    "build": "pnpm --filter @tqa/shared build && pnpm --filter @tqa/evidence-collector build && pnpm --filter @tqa/qa-agent build && pnpm --filter @tqa/validators build && pnpm --filter @tqa/api build && pnpm --filter @tqa/storefront build",
+    "typecheck": "pnpm --filter @tqa/shared build && pnpm --filter @tqa/evidence-collector build && pnpm --filter @tqa/qa-agent build && pnpm --filter @tqa/validators build && pnpm --filter @tqa/api build && pnpm --filter @tqa/storefront typecheck && tsc -p tests/tsconfig.json --noEmit && tsc -p tests/e2e/tsconfig.json --noEmit",
     "test": "pnpm run build && tsc -p tests/tsconfig.json --noEmit && node --experimental-strip-types --test tests/contract/*.test.ts tests/e2e/*.test.ts",
     "test:e2e": "pnpm run build && playwright test -c tests/e2e/playwright.config.ts --project=regression",
     "test:e2e:ghost-oracle": "pnpm run build && playwright test -c tests/e2e/playwright.config.ts --project=expected-negative",
@@ -22,6 +22,7 @@
     "@tqa/api": "workspace:*",
     "@tqa/evidence-collector": "workspace:*",
     "@tqa/qa-agent": "workspace:*",
+    "@tqa/validators": "workspace:*",
     "@tqa/shared": "workspace:*",
     "@types/node": "catalog:",
     "typescript": "catalog:"
