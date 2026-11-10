@@ -88,3 +88,7 @@ Status: ACCEPTED for implementation inside the approved sprint task. QA-01 throu
 - The baseline writer then exited 0 and wrote `fixtures/regression-baseline/baseline.json`. `loadMeasuredBaseline` accepts that file.
 - O-001 through O-007 were not run in a clean session. The probe file records UNVERIFIED for each one. `pnpm test` does not score them.
 - Measured hours: unknown. The 54 h + 9 h baseline is unchanged.
+
+## Review remediation (comment 6780710751)
+
+Reviewed head `4a7b5187d04e348fefb0eef760d9a9a879680809`. F-01, F-02, and F-03 were confirmed in `loadMeasuredBaseline` and `freezeFunctionalBaseline`. The loader now parses the persisted runs. It does not fill in statuses. Each ghost-oracle run stores `observedLookupStatus`, and only 404 can be frozen as the missing order. `assertRegressionRun` and `assertNegativeRun` reject a mismatched `projectName`. The baseline file was rewritten from ten new browser reports in this environment. The earlier aggregate-only file is not the evidence for this head. F-04 / D-01 stays pending a human sentence outside a generated review. O-001 through O-007 stay UNVERIFIED. Status stays IN_REVIEW.
