@@ -29,3 +29,18 @@ The same command also runs:
 `pnpm demo:false-pass` runs the limited ghost UI test and then the ghost oracle five times. It exits 0 only when the UI command exited 0 and all five oracle lookups were 404 `ABSENT` while Playwright itself exited non-zero. An exit 0 from this demo means the false PASS was reproduced.
 
 JSON evidence is written under `test-results/evidence/`. Those files are local artifacts, not a release decision. The gate `ALLOW` / `BLOCK` / `HOLD` is still QA-12.
+
+## QA-15 functional freeze
+
+`fixtures/regression-baseline/baseline.json` records five `pnpm test:e2e` runs and five `pnpm test:e2e:ghost-oracle` runs. The regression runs passed the same seven tests. The ghost-oracle runs exited 1. The assertion in `oracle-ghost.spec.ts` still expects HTTP 200. A pass on that command would mean the missing order was no longer visible, and the freeze rejects it. A change that marks the failure as an expected Playwright success is also rejected, because that would hide the red assertion.
+
+`tests/e2e/regression-baseline.ts` reads reports the caller already saved. It does not launch Playwright. `pnpm test` checks the committed file and the refusal rules. It does not repeat the ten browser runs. Replacing the file requires five new regression runs and five new ghost-oracle runs, then the writer below. Copying one report five times is rejected because the start timestamps would match.
+
+```bash
+node --experimental-strip-types tests/e2e/regression-baseline.ts \
+  --out fixtures/regression-baseline/baseline.json \
+  --regression path/to/regression-1.json 0 \
+  --expected-negative path/to/negative-1.json 1
+```
+
+The command takes five `--regression` pairs and five `--expected-negative` pairs. Each pair is a JSON report path and the process exit code.

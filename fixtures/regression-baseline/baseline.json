@@ -1,0 +1,135 @@
+{
+  "baselineVersion": "tqa-regression-baseline-1",
+  "source": "supplied-observations",
+  "playwrightInvokedByModule": false,
+  "functionalFreeze": true,
+  "limitation": "Five measured regression runs and five measured expected-negative runs on this machine. This is not a release decision, not a model score, and not a flakiness rate for any other environment.",
+  "regression": {
+    "command": "pnpm test:e2e",
+    "runs": 5,
+    "exitCodes": [
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    "startedAt": [
+      "2026-11-10T01:15:33.033Z",
+      "2026-11-10T01:16:22.920Z",
+      "2026-11-10T01:16:44.844Z",
+      "2026-11-10T01:17:07.688Z",
+      "2026-11-10T01:17:29.582Z"
+    ],
+    "durationMs": [
+      15924.874,
+      15429.495,
+      15438.628,
+      15397.251,
+      15394.755
+    ],
+    "tests": [
+      {
+        "file": "superficial-ui.spec.ts",
+        "title": "limited UI coverage records confirmation only for NORMAL",
+        "role": "limited-ui-normal",
+        "passedRuns": 5,
+        "failedRuns": 0
+      },
+      {
+        "file": "superficial-ui.spec.ts",
+        "title": "limited UI coverage records confirmation only for GHOST_SUCCESS",
+        "role": "limited-ui-ghost",
+        "passedRuns": 5,
+        "failedRuns": 0
+      },
+      {
+        "file": "superficial-ui.spec.ts",
+        "title": "limited UI coverage records confirmation only for VERIFICATION_UNAVAILABLE",
+        "role": "limited-ui-unavailable",
+        "passedRuns": 5,
+        "failedRuns": 0
+      },
+      {
+        "file": "oracle-normal.spec.ts",
+        "title": "independent oracle confirms a NORMAL order and its server total",
+        "role": "normal-oracle",
+        "passedRuns": 5,
+        "failedRuns": 0
+      },
+      {
+        "file": "oracle-unavailable.spec.ts",
+        "title": "unavailable verification stays 503 UNKNOWN and is not a 404 defect",
+        "role": "unavailable-oracle",
+        "passedRuns": 5,
+        "failedRuns": 0
+      },
+      {
+        "file": "fault-ghost-characterization.spec.ts",
+        "title": "control: injected GHOST_SUCCESS is still absent from the order read",
+        "role": "ghost-characterization",
+        "passedRuns": 5,
+        "failedRuns": 0
+      },
+      {
+        "file": "repeatability.spec.ts",
+        "title": "five consecutive NORMAL checkouts use distinct ids and each order is stored",
+        "role": "repeatability",
+        "passedRuns": 5,
+        "failedRuns": 0
+      }
+    ]
+  },
+  "expectedNegative": {
+    "command": "pnpm test:e2e:ghost-oracle",
+    "runs": 5,
+    "exitCodes": [
+      1,
+      1,
+      1,
+      1,
+      1
+    ],
+    "startedAt": [
+      "2026-11-10T01:17:51.507Z",
+      "2026-11-10T01:18:11.386Z",
+      "2026-11-10T01:18:30.890Z",
+      "2026-11-10T01:18:50.754Z",
+      "2026-11-10T01:19:10.534Z"
+    ],
+    "durationMs": [
+      12090.644,
+      12182.699,
+      12146.157,
+      12137.419,
+      12346.464
+    ],
+    "file": "oracle-ghost.spec.ts",
+    "title": "independent oracle requires a persisted order @expected-negative",
+    "expectedStatus": "passed",
+    "observedStatus": "failed",
+    "playwrightStatus": "unexpected",
+    "classification": "EXPECTED_NEGATIVE_ABSENT_ORDER",
+    "passedRuns": 0,
+    "failedRuns": 5
+  },
+  "failureAnalysis": {
+    "regression": {
+      "runCount": 5,
+      "flakyTitles": [],
+      "stableFailureTitles": []
+    },
+    "expectedNegative": {
+      "runCount": 5,
+      "passedRuns": 0,
+      "failedRuns": 5,
+      "observedStatuses": [
+        "failed",
+        "failed",
+        "failed",
+        "failed",
+        "failed"
+      ]
+    }
+  }
+}
