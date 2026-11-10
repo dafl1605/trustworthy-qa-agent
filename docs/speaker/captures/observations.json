@@ -1,0 +1,91 @@
+{
+  "captureVersion": "tqa-speaker-captures-1",
+  "capturedAt": "2026-11-10T22:33:43.412Z",
+  "modelInvoked": false,
+  "diagnosisSource": "scripted-for-slide",
+  "policyVersion": "tqa-gate-1",
+  "uiMessage": "Order confirmed",
+  "screenNote": "This message is not proof that an order was saved.",
+  "viewport": {
+    "width": 1280,
+    "height": 800
+  },
+  "catalogScreenshot": "catalog.png",
+  "catalogSha256": "cfbf9f96fea37077493d3edd9f715e86feff8db08940ffd9b92f049fec1d290d",
+  "scenarios": [
+    {
+      "scenario": "NORMAL",
+      "screenshot": "confirmation-normal.png",
+      "orderId": "eb36e5e4-fa91-4ba2-9089-53bf67fbc58b",
+      "runId": "5895e4d3-430c-420c-a64a-66c3e9c690ce",
+      "shownTotalCents": 1299,
+      "lookupStatus": 200,
+      "lookupCode": "FOUND",
+      "unavailableReason": null,
+      "verificationStatus": "CONFIRMED",
+      "gateWithoutDiagnosis": "ALLOW",
+      "gateWithScriptedSuccess": "ALLOW",
+      "gateWithScriptedMissingOrder": null,
+      "reasonCodesWithoutDiagnosis": [
+        "VERIFICATION_CONFIRMED"
+      ],
+      "reasonCodesWithScriptedSuccess": [
+        "VERIFICATION_CONFIRMED"
+      ],
+      "reasonCodesWithScriptedMissingOrder": null
+    },
+    {
+      "scenario": "GHOST_SUCCESS",
+      "screenshot": "confirmation-ghost.png",
+      "orderId": "3c61f179-57c0-4edf-b148-c31cf65cf335",
+      "runId": "ff4b2577-6f96-460f-b42d-4fbfe121160c",
+      "shownTotalCents": 1299,
+      "lookupStatus": 404,
+      "lookupCode": "ABSENT",
+      "unavailableReason": null,
+      "verificationStatus": "DEFECT",
+      "gateWithoutDiagnosis": "BLOCK",
+      "gateWithScriptedSuccess": "BLOCK",
+      "gateWithScriptedMissingOrder": null,
+      "reasonCodesWithoutDiagnosis": [
+        "VERIFICATION_DEFECT"
+      ],
+      "reasonCodesWithScriptedSuccess": [
+        "VERIFICATION_DEFECT",
+        "DIAGNOSIS_IGNORED"
+      ],
+      "reasonCodesWithScriptedMissingOrder": null
+    },
+    {
+      "scenario": "VERIFICATION_UNAVAILABLE",
+      "screenshot": "confirmation-unavailable.png",
+      "orderId": "6145ab29-4ba6-4214-b289-47da69f34754",
+      "runId": "8d1e6f41-142d-44b6-a52f-e564315dac5c",
+      "shownTotalCents": 1299,
+      "lookupStatus": 503,
+      "lookupCode": "UNAVAILABLE",
+      "unavailableReason": "service_unavailable",
+      "verificationStatus": "UNKNOWN",
+      "gateWithoutDiagnosis": "HOLD",
+      "gateWithScriptedSuccess": "HOLD",
+      "gateWithScriptedMissingOrder": "HOLD",
+      "reasonCodesWithoutDiagnosis": [
+        "VERIFICATION_UNKNOWN"
+      ],
+      "reasonCodesWithScriptedSuccess": [
+        "VERIFICATION_UNKNOWN",
+        "DIAGNOSIS_IGNORED"
+      ],
+      "reasonCodesWithScriptedMissingOrder": [
+        "VERIFICATION_UNKNOWN",
+        "DIAGNOSIS_IGNORED"
+      ]
+    }
+  ],
+  "files": {
+    "catalog.png": "cfbf9f96fea37077493d3edd9f715e86feff8db08940ffd9b92f049fec1d290d",
+    "confirmation-normal.png": "2d65f8ee072a815aea3ca36914c5c7aaa715c76764bcc4ba90220987bbe5e9dc",
+    "confirmation-ghost.png": "f743906b904f69a22403c78984acacca341700f6222fd461c13fd42e69f321b1",
+    "confirmation-unavailable.png": "afcd2677032fc3e0956cecda8e653dadfd55295ec2b58f59dfaaa51956208b90"
+  }
+}

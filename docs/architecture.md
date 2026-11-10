@@ -1,4 +1,4 @@
-# Architecture — QA-01 scaffold, QA-02 checkout API, QA-03 storefront shell, QA-04 commerce UI, QA-05 fault harness, QA-06 Playwright oracle, QA-07 evidence collector, QA-08 read-only tools, QA-09 investigation loop, QA-10 diagnosis check, QA-11 independent validator, QA-12 quality gate, QA-13 golden dataset, QA-14 eval runner
+# Architecture — QA-01 scaffold, QA-02 checkout API, QA-03 storefront shell, QA-04 commerce UI, QA-05 fault harness, QA-06 Playwright oracle, QA-07 evidence collector, QA-08 read-only tools, QA-09 investigation loop, QA-10 diagnosis check, QA-11 independent validator, QA-12 quality gate, QA-13 golden dataset, QA-14 eval runner, QA-15 regression baseline, QA-16 speaker slides
 
 This note is the as-built skeleton. Observable product behavior still lives in `docs/spec.md`. Domain names live in `docs/architecture-contracts.md`. Foundation choices live in `docs/adr/0001-runtime-foundations.md`.
 
@@ -210,6 +210,10 @@ The report version is `tqa-eval-report-1`. It lists every case and counts classi
 `scoreCheckedInStimuli` loads `tqa-golden-v1` and builds observations from `authoritativeLookup` and `scriptedCandidateDiagnosis`. `FOUND` is `CONFIRMED`, `ABSENT` is `DEFECT`, and `UNAVAILABLE_503`, `UNAVAILABLE_TIMEOUT`, and `TOOL_TIMEOUT` are `UNKNOWN`. The gate is the policy decision, not a copy of `expectedGate`. `GD-GHOST-03` cites `ev-fabricated`, which is not resolved. The other stimuli name no evidence id. `measuredFromModel` is true only when every supplied source is `live-model`. `modelInvoked` and `authorityExecuted` stay false, because this function does not call a provider and does not open SQLite. `generalizes` stays false. The limitation says n=12 is not a reliability rate.
 
 The loader stays in `tests/contract/golden-dataset.ts`. The runner imports it. O-001 through O-007 stay UNVERIFIED. The QA-15 session recorded that score in `docs/orchestrator-eval-probes.md`. `pnpm test` does not score those probes.
+
+## Speaker slides (QA-16)
+
+`docs/speaker/slides.md` is a 14-slide English draft for the meetup. It is not sent, not rehearsed, and not a gate decision. The three confirmation PNGs in `docs/speaker/captures/` show the same `Order confirmed` text. `observations.json` records the lookup, `verifyOrder`, and `decideRelease` results for those three checkouts. The diagnosis in that file is `scripted-for-slide`. `modelInvoked` is false. Slide 10 quotes `tqa-regression-baseline-2` without turning its durations into a rate. Slide 11 quotes the scripted eval counts and says `measuredFromModel` is false. O-001 through O-007 stay UNVERIFIED. `tests/e2e/speaker-captures.ts` is not a Playwright spec, so `pnpm test:e2e` still runs the QA-15 inventory of seven tests. The deck does not identify a backup recording. S-008 stays incomplete.
 
 ## Explicitly absent
 
