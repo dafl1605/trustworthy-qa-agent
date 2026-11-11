@@ -2,7 +2,7 @@
 
 | Path | Purpose | Introduced in |
 | --- | --- | --- |
-| `tests/contract/` | Zod contracts, SQLite schema, checkout, harness, the evidence collector, the read-only tools, the bounded investigation loop, diagnosis claim checks, the independent validator, the quality gate, the golden-dataset labels, the speaker-slide citations, and the demo-rehearsal citations | QA-01, extended through QA-17 |
+| `tests/contract/` | Zod contracts, SQLite schema, checkout, harness, the evidence collector, the read-only tools, the bounded investigation loop, diagnosis claim checks, the independent validator, the quality gate, the golden-dataset labels, the speaker-slide citations, the demo-rehearsal citations, and the talk-outline citations | QA-01, extended through QA-18 |
 | `tests/e2e/` | Playwright UI + independent oracle checks | QA-06 |
 | `tests/evals/` | Eval runner that scores supplied observations against the twelve golden labels | QA-14 |
 | `fixtures/golden-dataset/` | 12 human-authored labels with decision-matrix provenance | QA-13 |

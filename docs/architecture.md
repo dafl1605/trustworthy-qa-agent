@@ -1,4 +1,4 @@
-# Architecture — QA-01 scaffold, QA-02 checkout API, QA-03 storefront shell, QA-04 commerce UI, QA-05 fault harness, QA-06 Playwright oracle, QA-07 evidence collector, QA-08 read-only tools, QA-09 investigation loop, QA-10 diagnosis check, QA-11 independent validator, QA-12 quality gate, QA-13 golden dataset, QA-14 eval runner, QA-15 regression baseline, QA-16 speaker slides
+# Architecture — QA-01 scaffold, QA-02 checkout API, QA-03 storefront shell, QA-04 commerce UI, QA-05 fault harness, QA-06 Playwright oracle, QA-07 evidence collector, QA-08 read-only tools, QA-09 investigation loop, QA-10 diagnosis check, QA-11 independent validator, QA-12 quality gate, QA-13 golden dataset, QA-14 eval runner, QA-15 regression baseline, QA-16 speaker slides, QA-17 demo rehearsal, QA-18 talk notes and runbook
 
 This note is the as-built skeleton. Observable product behavior still lives in `docs/spec.md`. Domain names live in `docs/architecture-contracts.md`. Foundation choices live in `docs/adr/0001-runtime-foundations.md`.
 
@@ -224,6 +224,14 @@ The loader stays in `tests/contract/golden-dataset.ts`. The runner imports it. O
 The JSON file records the lookup, `verifyOrder`, and `decideRelease` for that same run. The diagnosis attached there is `scripted-for-rehearsal`. `modelInvoked` is false. `NORMAL` is `200 FOUND` / `CONFIRMED` / `ALLOW`. `GHOST_SUCCESS` stays `404 ABSENT` / `DEFECT` / `BLOCK` when a scripted `SUCCESS` diagnosis is attached. `VERIFICATION_UNAVAILABLE` stays `503` `service_unavailable` / `UNKNOWN` / `HOLD`, including a scripted claim that the 503 is a confirmed missing order. `elapsedMs` is the wall-clock time of the automated paths. `pnpm demo:rehearsal` exiting 0 means those three paths matched the matrix. It does not mean `ALLOW`.
 
 `tests/e2e/demo-rehearsal.ts` is not a Playwright spec. `pnpm test:e2e` does not run it. The QA-15 seven-test inventory is unchanged. The deck still does not identify this recording.
+
+## Talk notes and runbook (QA-18)
+
+`README.md` has a meetup runbook. It restates the three local commands that show the matrix, and it says what a green `pnpm test:e2e` does not prove. The harness stays off unless `TQA_HARNESS=1` and a non-empty `TQA_HARNESS_TOKEN` are set for a loopback caller. The runbook does not print a token.
+
+`docs/speaker/talk-notes.md` is the English outline for about 35 minutes. The planned segments in `docs/speaker/talk-rehearsal.json` sum to 2100 seconds. One of those segments is the 720-second demo plan already written in `docs/speaker/demo-script.md`. Those 720 seconds are not added a second time. `spokenElapsedSeconds` is null. `spokenDeliveryMeasured` stays false. A person has not timed the outline aloud. S-008 stays incomplete.
+
+`docs/speaker/deliverables.md` lists the deck, the demo script, the backup recording, the captures, the golden dataset, and the regression freeze. The deck still does not identify the backup recording. The proposal in `docs/speaker/2026-11-25-browserstack-draft.md` stays unsent. O-001 through O-007 stay UNVERIFIED.
 
 ## Explicitly absent
 
