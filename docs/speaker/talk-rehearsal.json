@@ -1,0 +1,62 @@
+{
+  "rehearsalVersion": "tqa-talk-outline-1",
+  "rehearsalKind": "planned-english-talk",
+  "modelInvoked": false,
+  "spokenDeliveryMeasured": false,
+  "spokenElapsedSeconds": null,
+  "s008Complete": false,
+  "plannedContentSeconds": 2100,
+  "demoPlanSeconds": 720,
+  "policyVersion": "tqa-gate-1",
+  "backupRecordingPath": "docs/speaker/rehearsal/backup-recording.webm",
+  "deckIdentifiesBackupRecording": false,
+  "demoScriptPath": "docs/speaker/demo-script.md",
+  "talkNotesPath": "docs/speaker/talk-notes.md",
+  "runbookPath": "README.md",
+  "deliverablesPath": "docs/speaker/deliverables.md",
+  "limitation": "These segments are a plan that sums to 2100 seconds. A person has not timed them aloud. spokenElapsedSeconds is null. The automated checkout time stays in docs/speaker/rehearsal/rehearsal.json and is not a spoken duration. S-008 is not complete.",
+  "segments": [
+    {
+      "id": "open",
+      "startSeconds": 0,
+      "durationSeconds": 180,
+      "label": "Open: a passing screen and a confident diagnosis are not the order"
+    },
+    {
+      "id": "screen",
+      "startSeconds": 180,
+      "durationSeconds": 300,
+      "label": "Screen: Order confirmed is the same sentence in all three modes"
+    },
+    {
+      "id": "matrix",
+      "startSeconds": 480,
+      "durationSeconds": 240,
+      "label": "Matrix: NORMAL ALLOW, GHOST_SUCCESS BLOCK, VERIFICATION_UNAVAILABLE HOLD"
+    },
+    {
+      "id": "pipeline",
+      "startSeconds": 720,
+      "durationSeconds": 300,
+      "label": "Pipeline: one read-only agent, an independent read, and policy tqa-gate-1"
+    },
+    {
+      "id": "demo",
+      "startSeconds": 1020,
+      "durationSeconds": 720,
+      "label": "Demo: follow the 12-minute operator script or play the backup recording"
+    },
+    {
+      "id": "limits",
+      "startSeconds": 1740,
+      "durationSeconds": 240,
+      "label": "Limits: quote the freeze and the scripted eval only as written"
+    },
+    {
+      "id": "close",
+      "startSeconds": 1980,
+      "durationSeconds": 120,
+      "label": "Close: questions stay inside the committed files"
+    }
+  ]
+}

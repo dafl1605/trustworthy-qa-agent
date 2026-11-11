@@ -41,6 +41,38 @@ After **QA-16**, [`docs/speaker/slides.md`](docs/speaker/slides.md) is a 14-slid
 
 After **QA-17**, [`docs/speaker/demo-script.md`](docs/speaker/demo-script.md) is the operator script for those three modes. The backup recording is [`docs/speaker/rehearsal/backup-recording.webm`](docs/speaker/rehearsal/backup-recording.webm). [`rehearsal.json`](docs/speaker/rehearsal/rehearsal.json) times the automated checkouts and records the same matrix. `spokenDeliveryMeasured` is false. `pnpm demo:rehearsal` exits 0 when the three paths match that matrix. That exit is not `ALLOW`. A person has not timed the script aloud. S-008 is not complete.
 
+After **QA-18**, the meetup runbook below is the local path for those three modes. [`docs/speaker/talk-notes.md`](docs/speaker/talk-notes.md) is the English outline for the 35-minute content. [`docs/speaker/talk-rehearsal.json`](docs/speaker/talk-rehearsal.json) plans that outline as 2100 seconds and leaves `spokenElapsedSeconds` null. [`docs/speaker/deliverables.md`](docs/speaker/deliverables.md) lists the files a speaker can open. The deck still does not identify the backup recording. A person has not timed the talk aloud. S-008 is not complete.
+
+## Meetup runbook
+
+This section is the local path for the meetup. It does not start a public server, and it does not print a harness token. The storefront has no scenario switch. Fault control stays off unless `TQA_HARNESS=1` and a non-empty `TQA_HARNESS_TOKEN` are set for a loopback caller. Those routes are not under `/api/*`.
+
+`NORMAL` checkout persists the order: lookup `200 FOUND`, verification `CONFIRMED`, gate `ALLOW`.
+
+`GHOST_SUCCESS` shows `Order confirmed` and persists no order: lookup `404 ABSENT`, verification `DEFECT`, gate `BLOCK`.
+
+`VERIFICATION_UNAVAILABLE` shows `Order confirmed` and the order read returns 503 `service_unavailable`: verification `UNKNOWN`, gate `HOLD`.
+
+A 503 is not a 404. `HOLD` is not a softer `BLOCK`. A scripted `SUCCESS` diagnosis does not turn the ghost path into `ALLOW` or the unavailable path into `BLOCK`. Policy version `tqa-gate-1` makes that decision. A passing screen is not the decision.
+
+`pnpm test:e2e` passing does not mean `ALLOW`. It includes a limited confirmation check that passes for `GHOST_SUCCESS` without reading the order.
+
+`pnpm test:e2e:ghost-oracle` is expected to fail the ghost case with 404 `ABSENT`. The assertion still expects HTTP 200. That failure is the expected negative result.
+
+`pnpm demo:false-pass` exits 0 when that false UI pass and the five failing ghost oracles were reproduced. That exit is not `ALLOW`.
+
+`pnpm demo:rehearsal` exits 0 when the three automated paths match the matrix above. That exit is not `ALLOW`. The command can replace the committed backup and its order ids. Say so if you regenerate it before the meetup.
+
+The backup recording is `docs/speaker/rehearsal/backup-recording.webm`.
+
+The deck in `docs/speaker/slides.md` does not identify that recording. If the live checkout cannot be shown, play the video and read only the rows in `docs/speaker/rehearsal/rehearsal.json`. The video is the confirmation screen. It is not the order lookup and it is not a release decision.
+
+The 12-minute words are `docs/speaker/demo-script.md`. The 35-minute outline is `docs/speaker/talk-notes.md`. The file list is `docs/speaker/deliverables.md`.
+
+`spokenDeliveryMeasured` is false. A person has not timed the talk aloud. S-008 is not complete.
+
+O-001 through O-007 remain UNVERIFIED. Do not quote a percent. Do not present a scripted diagnosis as a live model result. The proposal in `docs/speaker/2026-11-25-browserstack-draft.md` has not been sent.
+
 ## Requirements
 
 - Node.js `>=22.13.0` (verified on `22.23.4`)

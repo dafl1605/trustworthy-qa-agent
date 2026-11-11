@@ -75,6 +75,7 @@ function scriptProblems(markdown: string, rehearsal: Rehearsal): string[] {
   const problems: string[] = [];
   const required = [
     'A person has not timed this script aloud. S-008 is not complete.',
+    'The 35-minute outline is `docs/speaker/talk-notes.md`. A person has not timed that outline aloud.',
     'This file is the backup recording: `docs/speaker/rehearsal/backup-recording.webm`.',
     'The video is not the order lookup and it is not a release decision.',
     'Each confirmation is held on screen. The hold is not a spoken pause.',

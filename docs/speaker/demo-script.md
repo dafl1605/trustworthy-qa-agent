@@ -4,7 +4,7 @@
 **Talk:** Who Tests the AI That Tests Your Software?  
 **Event:** BrowserStack Online Meetup, 2026-11-25.  
 **What this is:** the words and the order for showing `NORMAL`, `GHOST_SUCCESS`, and `VERIFICATION_UNAVAILABLE`.  
-**What this is not:** a measured spoken delivery. A person has not timed this script aloud. S-008 is not complete. The 35-minute talk rehearsal is still QA-18. The deck in `docs/speaker/slides.md` does not identify a backup recording. This script does.
+**What this is not:** a measured spoken delivery. A person has not timed this script aloud. S-008 is not complete. The 35-minute outline is `docs/speaker/talk-notes.md`. A person has not timed that outline aloud. The deck in `docs/speaker/slides.md` does not identify a backup recording. This script does.
 
 The minute marks below are a plan. They are not a stopwatch reading from a person. The measured time in `docs/speaker/rehearsal/rehearsal.json` is the automated checkout rehearsal only.
 
