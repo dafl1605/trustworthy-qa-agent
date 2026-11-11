@@ -28,6 +28,10 @@ The same command also runs:
 
 `pnpm demo:false-pass` runs the limited ghost UI test and then the ghost oracle five times. It exits 0 only when the UI command exited 0 and all five oracle lookups were 404 `ABSENT` while Playwright itself exited non-zero. An exit 0 from this demo means the false PASS was reproduced.
 
+## QA-17 demo rehearsal
+
+`pnpm demo:rehearsal` builds the workspace and runs `tests/e2e/demo-rehearsal.ts`. That file is not a Playwright spec. The command places one mug in `NORMAL`, `GHOST_SUCCESS`, and `VERIFICATION_UNAVAILABLE`, records the screen to `docs/speaker/rehearsal/backup-recording.webm`, and writes the lookup, the validator, and the gate to `docs/speaker/rehearsal/rehearsal.json`. Exit 0 means those three paths matched `200 FOUND` / `CONFIRMED` / `ALLOW`, `404 ABSENT` / `DEFECT` / `BLOCK`, and `503` `service_unavailable` / `UNKNOWN` / `HOLD`. A scripted `SUCCESS` diagnosis does not move the ghost path off `BLOCK` or the unavailable path off `HOLD`. Exit 0 is not `ALLOW`. The video shows `Order confirmed` and is not the order lookup. `spokenDeliveryMeasured` stays false. The command does not change the seven-test regression inventory.
+
 JSON evidence is written under `test-results/evidence/`. Those files are local artifacts, not a release decision. The gate `ALLOW` / `BLOCK` / `HOLD` is still QA-12.
 
 ## QA-15 functional freeze

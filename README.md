@@ -37,7 +37,9 @@ After **QA-14**, `tests/evals/runner.ts` compares one supplied observation per l
 
 After **QA-15**, `fixtures/regression-baseline/baseline.json` freezes five measured `pnpm test:e2e` runs and five measured `pnpm test:e2e:ghost-oracle` runs. The file stores each run's statuses. Each regression run passed the same seven tests, including the limited `GHOST_SUCCESS` confirmation and the 503 oracle. Each ghost-oracle run exited 1, the stored lookup status is 404, and the assertion still expects 200. That failure stays the expected negative result. The freeze is not a release decision. O-001 through O-007 stay UNVERIFIED; `pnpm test` does not score them.
 
-After **QA-16**, [`docs/speaker/slides.md`](docs/speaker/slides.md) is a 14-slide English draft. It has not been sent and it has not been rehearsed. The captures in [`docs/speaker/captures/`](docs/speaker/captures/) show the same `Order confirmed` screen for `NORMAL`, `GHOST_SUCCESS`, and `VERIFICATION_UNAVAILABLE`. The observation file records lookup `200 FOUND` / `CONFIRMED` / `ALLOW`, `404 ABSENT` / `DEFECT` / `BLOCK`, and `503 UNAVAILABLE` / `UNKNOWN` / `HOLD`. No model was called. The deck quotes the QA-15 freeze and the scripted eval counts, and it does not identify a backup recording. S-008 is not complete.
+After **QA-16**, [`docs/speaker/slides.md`](docs/speaker/slides.md) is a 14-slide English draft. It has not been sent and it has not been rehearsed aloud. The captures in [`docs/speaker/captures/`](docs/speaker/captures/) show the same `Order confirmed` screen for `NORMAL`, `GHOST_SUCCESS`, and `VERIFICATION_UNAVAILABLE`. The observation file records lookup `200 FOUND` / `CONFIRMED` / `ALLOW`, `404 ABSENT` / `DEFECT` / `BLOCK`, and `503 UNAVAILABLE` / `UNKNOWN` / `HOLD`. No model was called. The deck quotes the QA-15 freeze and the scripted eval counts, and it does not identify a backup recording. S-008 is not complete.
+
+After **QA-17**, [`docs/speaker/demo-script.md`](docs/speaker/demo-script.md) is the operator script for those three modes. The backup recording is [`docs/speaker/rehearsal/backup-recording.webm`](docs/speaker/rehearsal/backup-recording.webm). [`rehearsal.json`](docs/speaker/rehearsal/rehearsal.json) times the automated checkouts and records the same matrix. `spokenDeliveryMeasured` is false. `pnpm demo:rehearsal` exits 0 when the three paths match that matrix. That exit is not `ALLOW`. A person has not timed the script aloud. S-008 is not complete.
 
 ## Requirements
 
@@ -56,6 +58,7 @@ pnpm build
 pnpm test
 pnpm test:e2e
 pnpm demo:false-pass
+pnpm demo:rehearsal
 pnpm db:migrate
 pnpm --filter @tqa/api start   # loopback API on 127.0.0.1:3001
 pnpm --filter @tqa/storefront dev   # proxies /api to 127.0.0.1:3001

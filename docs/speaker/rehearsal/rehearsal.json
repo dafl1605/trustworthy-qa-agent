@@ -1,0 +1,129 @@
+{
+  "rehearsalVersion": "tqa-demo-rehearsal-1",
+  "rehearsedAt": "2026-11-11T00:01:34.164Z",
+  "finishedAt": "2026-11-11T00:01:48.251Z",
+  "modelInvoked": false,
+  "diagnosisSource": "scripted-for-rehearsal",
+  "spokenDeliveryMeasured": false,
+  "rehearsalKind": "automated-checkout-paths",
+  "twelveMinuteBudgetMs": 720000,
+  "visibleHoldMs": 3000,
+  "elapsedMs": 14082,
+  "automationFitsBudget": true,
+  "policyVersion": "tqa-gate-1",
+  "uiMessage": "Order confirmed",
+  "screenNote": "This message is not proof that an order was saved.",
+  "limitation": "This file times the three automated checkout paths. Each confirmation is held on screen so the backup video can show it. That hold is not a spoken pause. A person has not timed the operator script aloud. The video shows the confirmation screen. It is not the order lookup and it is not a release decision.",
+  "backupRecording": {
+    "path": "docs/speaker/rehearsal/backup-recording.webm",
+    "mediaType": "video/webm",
+    "sha256": "c83394c4f3f59e941dbc435c9c8ba7d7c0e423db4d63e20daae3a94d61bf2e41",
+    "bytes": 1273478,
+    "role": "backup-if-live-demo-cannot-run"
+  },
+  "plannedSpeechSegments": [
+    {
+      "id": "open",
+      "startSeconds": 0,
+      "durationSeconds": 60,
+      "label": "Open: a passing screen is not the order"
+    },
+    {
+      "id": "normal",
+      "startSeconds": 60,
+      "durationSeconds": 180,
+      "label": "NORMAL: the screen and the stored row agree"
+    },
+    {
+      "id": "ghost",
+      "startSeconds": 240,
+      "durationSeconds": 240,
+      "label": "GHOST_SUCCESS: the screen passes and the row is absent"
+    },
+    {
+      "id": "unavailable",
+      "startSeconds": 480,
+      "durationSeconds": 180,
+      "label": "VERIFICATION_UNAVAILABLE: a 503 is not a 404"
+    },
+    {
+      "id": "close",
+      "startSeconds": 660,
+      "durationSeconds": 60,
+      "label": "Close: the backup recording is the screen, not the oracle"
+    }
+  ],
+  "scenarios": [
+    {
+      "scenario": "NORMAL",
+      "orderId": "3ff565ec-8d57-4a6b-9a61-3656e2ea9d18",
+      "runId": "fc18a496-2b9e-424e-ac78-01086f671839",
+      "durationMs": 3288,
+      "shownTotalCents": 1299,
+      "confirmationMessage": "Order confirmed",
+      "lookupStatus": 200,
+      "lookupCode": "FOUND",
+      "unavailableReason": null,
+      "verificationStatus": "CONFIRMED",
+      "gateWithoutDiagnosis": "ALLOW",
+      "gateWithScriptedSuccess": "ALLOW",
+      "gateWithScriptedMissingOrder": null,
+      "reasonCodesWithoutDiagnosis": [
+        "VERIFICATION_CONFIRMED"
+      ],
+      "reasonCodesWithScriptedSuccess": [
+        "VERIFICATION_CONFIRMED"
+      ],
+      "reasonCodesWithScriptedMissingOrder": null
+    },
+    {
+      "scenario": "GHOST_SUCCESS",
+      "orderId": "2d7ecbd2-fb64-40e1-b249-4d79efdc6cf4",
+      "runId": "66d7749d-ae57-4dad-b088-c5090eceb65b",
+      "durationMs": 3252,
+      "shownTotalCents": 1299,
+      "confirmationMessage": "Order confirmed",
+      "lookupStatus": 404,
+      "lookupCode": "ABSENT",
+      "unavailableReason": null,
+      "verificationStatus": "DEFECT",
+      "gateWithoutDiagnosis": "BLOCK",
+      "gateWithScriptedSuccess": "BLOCK",
+      "gateWithScriptedMissingOrder": null,
+      "reasonCodesWithoutDiagnosis": [
+        "VERIFICATION_DEFECT"
+      ],
+      "reasonCodesWithScriptedSuccess": [
+        "VERIFICATION_DEFECT",
+        "DIAGNOSIS_IGNORED"
+      ],
+      "reasonCodesWithScriptedMissingOrder": null
+    },
+    {
+      "scenario": "VERIFICATION_UNAVAILABLE",
+      "orderId": "2519bcd8-6e5f-4c31-87d0-de4c3446377f",
+      "runId": "bc352c4a-a381-4925-9732-df36bb264b5a",
+      "durationMs": 3241,
+      "shownTotalCents": 1299,
+      "confirmationMessage": "Order confirmed",
+      "lookupStatus": 503,
+      "lookupCode": "UNAVAILABLE",
+      "unavailableReason": "service_unavailable",
+      "verificationStatus": "UNKNOWN",
+      "gateWithoutDiagnosis": "HOLD",
+      "gateWithScriptedSuccess": "HOLD",
+      "gateWithScriptedMissingOrder": "HOLD",
+      "reasonCodesWithoutDiagnosis": [
+        "VERIFICATION_UNKNOWN"
+      ],
+      "reasonCodesWithScriptedSuccess": [
+        "VERIFICATION_UNKNOWN",
+        "DIAGNOSIS_IGNORED"
+      ],
+      "reasonCodesWithScriptedMissingOrder": [
+        "VERIFICATION_UNKNOWN",
+        "DIAGNOSIS_IGNORED"
+      ]
+    }
+  ]
+}
