@@ -4,7 +4,7 @@
 **Talk:** Who Tests the AI That Tests Your Software?  
 **Event:** BrowserStack Online Meetup, 2026-11-25.  
 **What this is:** the words and the order for showing `NORMAL`, `GHOST_SUCCESS`, and `VERIFICATION_UNAVAILABLE`.  
-**What this is not:** a measured spoken delivery. A person has not timed this script aloud. S-008 is not complete. The 35-minute outline is `docs/speaker/talk-notes.md`. A person has not timed that outline aloud. The deck in `docs/speaker/slides.md` does not identify a backup recording. This script does.
+**What this is not:** a measured spoken delivery. A person has not timed this script aloud. S-008 is not complete. The 35-minute outline is `docs/speaker/talk-notes.md`. A person has not timed that outline aloud. The deck in `docs/speaker/slides.md` identifies `docs/speaker/rehearsal/backup-recording.webm`. This script does too.
 
 The minute marks below are a plan. They are not a stopwatch reading from a person. The measured time in `docs/speaker/rehearsal/rehearsal.json` is the automated checkout rehearsal only.
 
@@ -26,15 +26,15 @@ Say the title. Say that a confirmation message is not proof the order was saved.
 
 Place one Ceramic Mug with the harness in `NORMAL`, or play the matching stretch of the backup recording. The screen says `Order confirmed`. Then read the committed rehearsal row: lookup `200 FOUND`, verification `CONFIRMED`, gate `ALLOW`, policy `tqa-gate-1`. The total on the screen is 1299 cents. Say that this is the path where the screen and the stored row agree. Read the order id from `rehearsal.json` for the file you are showing. Do not memorize an id from an older run.
 
-## Plan ghost: 240 seconds, from 240. GHOST_SUCCESS: the screen passes and the row is absent
+## Plan ghost: 180 seconds, from 240. GHOST_SUCCESS: the screen passes, the scripted agent says SUCCESS, and the row is absent
 
-Use `GHOST_SUCCESS` the same way. The screen still says `Order confirmed`. Say that a limited UI check of that sentence passes, and that this pass does not call `GET /api/orders/:orderId`. Then read the rehearsal row: lookup `404 ABSENT`, verification `DEFECT`, gate `BLOCK`. A scripted SUCCESS diagnosis left GHOST_SUCCESS at BLOCK. The reason codes are `VERIFICATION_DEFECT` and `DIAGNOSIS_IGNORED`. Say that this is a defect, not an unavailable read. The ghost-oracle Playwright assertion still expects HTTP 200 and still fails on this absence. That failure is the expected negative result. Do not call it a persistence pass. `pnpm demo:false-pass` exiting 0 means that defect was reproduced. It is not `ALLOW`.
+Use `GHOST_SUCCESS` the same way. The screen still says `Order confirmed`. Say that a limited UI check of that sentence passes, and that this pass does not call `GET /api/orders/:orderId`. Then read the rehearsal row: lookup `404 ABSENT`, verification `DEFECT`, gate `BLOCK`. A scripted SUCCESS diagnosis left GHOST_SUCCESS at BLOCK. The reason codes are `VERIFICATION_DEFECT` and `DIAGNOSIS_IGNORED`. `pnpm demo:pipeline` runs the same three modes through the collector, one scripted agent labeled `scripted-mock`, the diagnosis check, `verifyOrder`, and `decideRelease`. `measuredFromModel` is false. Say that this is a defect, not an unavailable read. The ghost-oracle Playwright assertion still expects HTTP 200 and still fails on this absence. That failure is the expected negative result. Do not call it a persistence pass. `pnpm demo:false-pass` exiting 0 means that defect was reproduced. It is not `ALLOW`.
 
-## Plan unavailable: 180 seconds, from 480. VERIFICATION_UNAVAILABLE: a 503 is not a 404
+## Plan unavailable: 180 seconds, from 420. VERIFICATION_UNAVAILABLE: a 503 is not a 404
 
 Use `VERIFICATION_UNAVAILABLE`. The screen still says `Order confirmed`. Read the rehearsal row: lookup `503 UNAVAILABLE` with reason `service_unavailable`, verification `UNKNOWN`, gate `HOLD`. A scripted SUCCESS diagnosis left VERIFICATION_UNAVAILABLE at HOLD. A scripted claim that this 503 is a confirmed missing order also stayed HOLD, with reason codes `VERIFICATION_UNKNOWN` and `DIAGNOSIS_IGNORED`. Say that `HOLD` is not a softer `BLOCK`. A 503 is not a 404.
 
-## Plan close: 60 seconds, from 660. Close: the backup recording is the screen, not the oracle
+## Plan close: 120 seconds, from 600. Close: read the pipeline table, then the backup recording is the screen, not the oracle
 
 Repeat the split. The screen is the same sentence in all three modes. The independent read is what changes. No model was called for this rehearsal. `modelInvoked` is false. `spokenDeliveryMeasured` is false. Do not give a percent. Do not say the probes passed. O-001 through O-007 remain UNVERIFIED. If the live environment failed and you used the video, say again that the video is the backup of the screen and the JSON is the read.
 

@@ -9,7 +9,7 @@
 
 The segments below are a plan. They sum to 2100 seconds. The demo segment is 720 seconds. Those 720 seconds are the same plan as `docs/speaker/demo-script.md`. Do not add them a second time. The automated checkout time in `docs/speaker/rehearsal/rehearsal.json` is not a spoken duration.
 
-The deck in `docs/speaker/slides.md` does not identify a backup recording. This outline does. The proposal in `docs/speaker/2026-11-25-browserstack-draft.md` has not been sent. The speaker name, role, experience, contact, and headshot stay outside this file. Do not invent them.
+The deck in `docs/speaker/slides.md` identifies `docs/speaker/rehearsal/backup-recording.webm`. This outline does too. The proposal in `docs/speaker/2026-11-25-browserstack-draft.md` has not been sent. The speaker name, role, experience, contact, and headshot stay outside this file. Do not invent them.
 
 ## Plan open: 180 seconds, from 0. Open: a passing screen and a confident diagnosis are not the order
 

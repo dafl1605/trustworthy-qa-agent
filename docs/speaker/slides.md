@@ -4,7 +4,7 @@
 **Talk:** Who Tests the AI That Tests Your Software?  
 **Event:** BrowserStack Online Meetup, 2026-11-25.  
 **Audience:** Manual QA and SDET practitioners with about 2–5 years of experience.  
-**Lengths:** a 12-minute demo is planned inside about 35 minutes of content. Neither length has been rehearsed. This deck does not identify a backup recording. S-008 is not complete.  
+**Lengths:** a 12-minute demo is planned inside about 35 minutes of content. Neither length has been rehearsed. This deck identifies the backup recording `docs/speaker/rehearsal/backup-recording.webm`. S-008 is not complete.  
 **Captures:** `docs/speaker/captures/observations.json`, taken `2026-11-10T22:33:43.412Z`. `modelInvoked` is false. The attached diagnosis is `scripted-for-slide`, not a live model result.
 
 ---
@@ -173,9 +173,9 @@ Speaker note: If someone asks for accuracy, show this limitation instead of a pe
 | 2–6 | Normal read, `CONFIRMED`, `ALLOW` | A live model accuracy rate |
 | 6–9 | Ghost screen pass beside `404 ABSENT`, `DEFECT`, `BLOCK` | That the ghost oracle was changed to pass |
 | 9–11 | `503` `service_unavailable`, `UNKNOWN`, `HOLD` | That a 503 is a missing order |
-| 11–12 | The baseline limitation and the scripted eval limitation | A backup recording |
+| 11–12 | The baseline limitation and the scripted eval limitation | A measured spoken delivery |
 
-The demo script, a fallback recording, and a timed rehearsal belong to later tasks. This deck does not identify a backup recording.
+The backup recording is `docs/speaker/rehearsal/backup-recording.webm`. The video is the confirmation screen. It is not the order lookup and it is not a release decision.
 
 Speaker note: Offer to stop at the ghost contrast if time is short. Do not invent a recording if the live path fails.
 
@@ -183,7 +183,7 @@ Speaker note: Offer to stop at the ghost contrast if time is short. Do not inven
 
 ## Slide 13. Sources
 
-- `docs/spec.md` — S-001, S-002, S-003, and S-008. S-008 still needs a timed rehearsal and an identified backup recording.
+- `docs/spec.md` — S-001, S-002, S-003, and S-008. S-008 still needs a timed rehearsal. The backup recording is `docs/speaker/rehearsal/backup-recording.webm`.
 - `docs/architecture-contracts.md` — decision matrix and the rule that a 503 is not a 404.
 - `docs/intent.md` — a UI pass and a model diagnosis are not persistence proof.
 - `docs/speaker/captures/observations.json` — the three reads, the validator statuses, and the gate decisions from this capture. `capturedAt` is `2026-11-10T22:33:43.412Z`.

@@ -6,7 +6,7 @@ These files are the QA-17 backup and the timed log of the three checkout paths.
 
 `rehearsal.json` records the lookup, `verifyOrder`, and `decideRelease` results for the same run, plus the wall-clock time of that automated rehearsal. `modelInvoked` is false. `spokenDeliveryMeasured` is false. The diagnosis attached to the gate is `scripted-for-rehearsal`. It is not a live model result. The planned speech segments sum to 720 seconds. That sum is a plan for the operator script, not a stopwatch reading from a person.
 
-The operator script is `docs/speaker/demo-script.md`. The deck in `docs/speaker/slides.md` does not identify this recording.
+The operator script is `docs/speaker/demo-script.md`. The deck in `docs/speaker/slides.md` identifies `docs/speaker/rehearsal/backup-recording.webm`.
 
 Regenerate only when the committed backup should be replaced:
 

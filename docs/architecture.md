@@ -213,7 +213,7 @@ The loader stays in `tests/contract/golden-dataset.ts`. The runner imports it. O
 
 ## Speaker slides (QA-16)
 
-`docs/speaker/slides.md` is a 14-slide English draft for the meetup. It is not sent, not rehearsed aloud, and not a gate decision. The three confirmation PNGs in `docs/speaker/captures/` show the same `Order confirmed` text. `observations.json` records the lookup, `verifyOrder`, and `decideRelease` results for those three checkouts. The diagnosis in that file is `scripted-for-slide`. `modelInvoked` is false. Slide 10 quotes `tqa-regression-baseline-2` without turning its durations into a rate. Slide 11 quotes the scripted eval counts and says `measuredFromModel` is false. O-001 through O-007 stay UNVERIFIED. `tests/e2e/speaker-captures.ts` is not a Playwright spec, so `pnpm test:e2e` still runs the QA-15 inventory of seven tests. The deck does not identify a backup recording. S-008 stays incomplete.
+`docs/speaker/slides.md` is a 14-slide English draft for the meetup. It is not sent, not rehearsed aloud, and not a gate decision. The three confirmation PNGs in `docs/speaker/captures/` show the same `Order confirmed` text. `observations.json` records the lookup, `verifyOrder`, and `decideRelease` results for those three checkouts. The diagnosis in that file is `scripted-for-slide`. `modelInvoked` is false. Slide 10 quotes `tqa-regression-baseline-2` without turning its durations into a rate. Slide 11 quotes the scripted eval counts and says `measuredFromModel` is false. O-001 through O-007 stay UNVERIFIED. `tests/e2e/speaker-captures.ts` is not a Playwright spec, so `pnpm test:e2e` still runs the QA-15 inventory of seven tests. The deck names `docs/speaker/rehearsal/backup-recording.webm`. S-008 stays incomplete.
 
 ## Demo rehearsal (QA-17)
 
@@ -223,7 +223,7 @@ The loader stays in `tests/contract/golden-dataset.ts`. The runner imports it. O
 
 The JSON file records the lookup, `verifyOrder`, and `decideRelease` for that same run. The diagnosis attached there is `scripted-for-rehearsal`. `modelInvoked` is false. `NORMAL` is `200 FOUND` / `CONFIRMED` / `ALLOW`. `GHOST_SUCCESS` stays `404 ABSENT` / `DEFECT` / `BLOCK` when a scripted `SUCCESS` diagnosis is attached. `VERIFICATION_UNAVAILABLE` stays `503` `service_unavailable` / `UNKNOWN` / `HOLD`, including a scripted claim that the 503 is a confirmed missing order. `elapsedMs` is the wall-clock time of the automated paths. `pnpm demo:rehearsal` exiting 0 means those three paths matched the matrix. It does not mean `ALLOW`.
 
-`tests/e2e/demo-rehearsal.ts` is not a Playwright spec. `pnpm test:e2e` does not run it. The QA-15 seven-test inventory is unchanged. The deck still does not identify this recording.
+`tests/e2e/demo-rehearsal.ts` is not a Playwright spec. `pnpm test:e2e` does not run it. The QA-15 seven-test inventory is unchanged. The deck names `docs/speaker/rehearsal/backup-recording.webm`.
 
 ## Talk notes and runbook (QA-18)
 
@@ -231,7 +231,11 @@ The JSON file records the lookup, `verifyOrder`, and `decideRelease` for that sa
 
 `docs/speaker/talk-notes.md` is the English outline for about 35 minutes. The planned segments in `docs/speaker/talk-rehearsal.json` sum to 2100 seconds. One of those segments is the 720-second demo plan already written in `docs/speaker/demo-script.md`. Those 720 seconds are not added a second time. `spokenElapsedSeconds` is null. `spokenDeliveryMeasured` stays false. A person has not timed the outline aloud. S-008 stays incomplete.
 
-`docs/speaker/deliverables.md` lists the deck, the demo script, the backup recording, the captures, the golden dataset, and the regression freeze. The deck still does not identify the backup recording. The proposal in `docs/speaker/2026-11-25-browserstack-draft.md` stays unsent. O-001 through O-007 stay UNVERIFIED.
+`docs/speaker/deliverables.md` lists the deck, the demo script, the backup recording, the captures, the golden dataset, and the regression freeze. The deck names `docs/speaker/rehearsal/backup-recording.webm`. The proposal in `docs/speaker/2026-11-25-browserstack-draft.md` stays unsent. O-001 through O-007 stay UNVERIFIED.
+
+## Demo pipeline (QA-R3)
+
+`tests/e2e/demo-pipeline.ts` is the local command `pnpm demo:pipeline`. It is not a Playwright spec, so `pnpm test:e2e` does not run it. For `NORMAL`, `GHOST_SUCCESS`, and `VERIFICATION_UNAVAILABLE` it places one mug, records the screen text and the HTTP lookup in `@tqa/evidence-collector`, runs one scripted investigation with `createScriptedProvider`, parses that diagnosis with `checkModelDiagnosis`, then calls `verifyOrder` on the validator's own read-only connection and `decideRelease` with policy `tqa-gate-1`. The scripted lookup port repeats the HTTP body already observed. It is not the validator. The provider label is `scripted-mock`. `modelInvoked` is false. `measuredFromModel` is false. A scripted `SUCCESS` on the ghost path stays `BLOCK` with `DIAGNOSIS_IGNORED`. A scripted claim that the 503 is a confirmed missing order stays `HOLD`. A 503 is not stored as `ABSENT`. Exit 0 means the three rows matched that matrix. It does not mean `ALLOW`. The command does not edit the validator, the gate, the fault modes, or the golden dataset.
 
 ## Explicitly absent
 

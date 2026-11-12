@@ -47,7 +47,7 @@ W3-D3 VIE 13 | 3 h | QA-15 (SDET): 5 corridas de regression, análisis de fallos
 W3-D4 SÁB 14 | 3 h | QA-16 (Speaker): slides 12–14, narrativa y capturas reales; diagramas y fuentes.
 W3-D5 DOM 15 | 3 h | QA-17 (Speaker/SDET): scripts demo normal/ghost/unknown, grabación explícita como respaldo, rehearsal del demo.
 W3-D6 LUN 16 | 3 h | QA-18 (Speaker): README, notas EN, ensayo charla, recursos entregables.
-W3-D7 MAR 17 | 3 h RESERVA | QA-R3: tests, mejoras críticas, no features nuevos; preparar release candidate.
+W3-D7 MAR 17 | 3 h RESERVA | QA-R3: tests, mejoras críticas, no features nuevos; preparar release candidate. D-01 (comentario 6806395436 en el PR #24, opción A) aprobó `pnpm demo:pipeline` como excepción de contingencia. El PR #24 se fusionó como plan. La implementación va en un PR nuevo porque ese PR ya está cerrado. Las 3 h de reserva y los totales de 54 h + 9 h no cambian.
 Gate M3 17-nov: repo reproducible y presentación listos; demo en <=12 min con plan B y sin métricas fabricadas.
 
 ## Gate checklist por hito

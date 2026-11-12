@@ -185,7 +185,9 @@ describe('demo rehearsal', () => {
     assert.equal(bytes.subarray(0, 4).toString('hex'), '1a45dfa3');
     assert.equal(createHash('sha256').update(bytes).digest('hex'), rehearsal.backupRecording.sha256);
     assert.deepEqual(scriptProblems(script, rehearsal), []);
-    assert.equal(readFileSync(slidesPath, 'utf8').includes('This deck does not identify a backup recording.'), true);
+    const slides = readFileSync(slidesPath, 'utf8');
+    assert.equal(slides.includes('docs/speaker/rehearsal/backup-recording.webm'), true);
+    assert.equal(slides.includes('This deck does not identify a backup recording.'), false);
   });
 
   it('rejects a script that hides the ghost defect or claims a spoken timing', () => {

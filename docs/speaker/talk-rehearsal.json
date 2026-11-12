@@ -9,7 +9,7 @@
   "demoPlanSeconds": 720,
   "policyVersion": "tqa-gate-1",
   "backupRecordingPath": "docs/speaker/rehearsal/backup-recording.webm",
-  "deckIdentifiesBackupRecording": false,
+  "deckIdentifiesBackupRecording": true,
   "demoScriptPath": "docs/speaker/demo-script.md",
   "talkNotesPath": "docs/speaker/talk-notes.md",
   "runbookPath": "README.md",

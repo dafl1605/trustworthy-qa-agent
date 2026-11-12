@@ -4,7 +4,7 @@
 **Talk:** Who Tests the AI That Tests Your Software?  
 **Event:** BrowserStack Online Meetup, 2026-11-25.
 
-A person has not timed the talk aloud. S-008 is not complete. `spokenDeliveryMeasured` is false. The deck in `docs/speaker/slides.md` does not identify a backup recording. The backup recording is named here and in the demo script.
+A person has not timed the talk aloud. S-008 is not complete. `spokenDeliveryMeasured` is false. The deck in `docs/speaker/slides.md` identifies `docs/speaker/rehearsal/backup-recording.webm`. The backup recording is named here and in the demo script.
 
 | Path | What it is | What it is not |
 |---|---|---|
@@ -12,7 +12,7 @@ A person has not timed the talk aloud. S-008 is not complete. `spokenDeliveryMea
 | `docs/speaker/deliverables.md` | This index | A release approval |
 | `docs/speaker/talk-notes.md` | English 35-minute outline, planned as 2100 seconds | A measured spoken delivery |
 | `docs/speaker/talk-rehearsal.json` | The planned segments, with `spokenElapsedSeconds` null | A stopwatch log |
-| `docs/speaker/slides.md` | 14-slide English draft | A file that identifies the backup recording |
+| `docs/speaker/slides.md` | 14-slide English draft that names `docs/speaker/rehearsal/backup-recording.webm` | A measured spoken delivery |
 | `docs/speaker/demo-script.md` | 12-minute operator script, planned as 720 seconds | A measured spoken delivery |
 | `docs/speaker/rehearsal/backup-recording.webm` | Backup of the three confirmation screens | The order lookup or a gate decision |
 | `docs/speaker/rehearsal/rehearsal.json` | Measured automated checkout paths | A spoken duration |
