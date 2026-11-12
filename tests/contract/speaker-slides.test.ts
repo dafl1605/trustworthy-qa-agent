@@ -66,8 +66,14 @@ function deckProblems(markdown: string, observations: Observations): string[] {
   if (!markdown.includes('DRAFT') || !markdown.includes('Not sent')) {
     problems.push('draft status');
   }
-  if (!markdown.includes('This deck does not identify a backup recording.')) {
+  if (
+    markdown.includes('This deck does not identify a backup recording.') ||
+    !markdown.includes('docs/speaker/rehearsal/backup-recording.webm')
+  ) {
     problems.push('recording claim');
+  }
+  if (markdown.includes('S-008 is now complete') || markdown.includes('spoken delivery was measured')) {
+    problems.push('overclaim');
   }
   if (!markdown.includes('O-001 through O-007 remain UNVERIFIED')) {
     problems.push('probe status');
@@ -172,10 +178,12 @@ describe('speaker slides', () => {
     const rated = `${slides}\nThe model accuracy was 92%.\n`;
     assert.ok(deckProblems(rated, observations).includes('percent figure'));
     const recorded = slides.replaceAll(
+      'docs/speaker/rehearsal/backup-recording.webm',
       'This deck does not identify a backup recording.',
-      'The backup recording is already identified.',
     );
     assert.ok(deckProblems(recorded, observations).includes('recording claim'));
+    const complete = slides.replace('S-008 is not complete.', 'S-008 is now complete.');
+    assert.ok(deckProblems(complete, observations).includes('overclaim'));
   });
 
   it('binds each cited screenshot to the hash from the capture', () => {

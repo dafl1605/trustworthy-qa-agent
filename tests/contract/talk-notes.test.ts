@@ -71,13 +71,13 @@ function requiredSentences(outline: TalkOutline, includePlan: boolean): string[]
       '`NORMAL` checkout persists the order: lookup `200 FOUND`, verification `CONFIRMED`, gate `ALLOW`.',
       '`GHOST_SUCCESS` shows `Order confirmed` and persists no order: lookup `404 ABSENT`, verification `DEFECT`, gate `BLOCK`.',
       '`VERIFICATION_UNAVAILABLE` shows `Order confirmed` and the order read returns 503 `service_unavailable`: verification `UNKNOWN`, gate `HOLD`.',
-      'The deck in `docs/speaker/slides.md` does not identify that recording.',
+      'The deck in `docs/speaker/slides.md` identifies `docs/speaker/rehearsal/backup-recording.webm`.',
     ];
   }
   return [
     ...shared,
     '`modelInvoked` is false',
-    'The deck in `docs/speaker/slides.md` does not identify a backup recording.',
+    'The deck in `docs/speaker/slides.md` identifies `docs/speaker/rehearsal/backup-recording.webm`.',
     'This message is not proof that an order was saved.',
     '`HOLD` is not a softer `BLOCK`.',
     'A scripted SUCCESS diagnosis left GHOST_SUCCESS at BLOCK.',
@@ -139,7 +139,7 @@ describe('talk outline', () => {
     assert.equal(outline.demoPlanSeconds, 720);
     assert.equal(outline.policyVersion, 'tqa-gate-1');
     assert.equal(outline.backupRecordingPath, 'docs/speaker/rehearsal/backup-recording.webm');
-    assert.equal(outline.deckIdentifiesBackupRecording, false);
+    assert.equal(outline.deckIdentifiesBackupRecording, true);
     assert.equal(outline.demoScriptPath, 'docs/speaker/demo-script.md');
     assert.equal(outline.talkNotesPath, 'docs/speaker/talk-notes.md');
     assert.equal(outline.runbookPath, 'README.md');
@@ -162,7 +162,9 @@ describe('talk outline', () => {
     }
     assert.equal(planned, 2100);
     assert.equal(cursor, 2100);
-    assert.equal(readFileSync(slidesPath, 'utf8').includes('This deck does not identify a backup recording.'), true);
+    const slides = readFileSync(slidesPath, 'utf8');
+    assert.equal(slides.includes('docs/speaker/rehearsal/backup-recording.webm'), true);
+    assert.equal(slides.includes('This deck does not identify a backup recording.'), false);
     assert.deepEqual(proseProblems(notes, outline, true), []);
     assert.deepEqual(proseProblems(readme, outline, false), []);
     for (const path of [

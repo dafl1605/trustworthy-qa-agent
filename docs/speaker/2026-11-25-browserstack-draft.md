@@ -40,7 +40,7 @@ Do not add a personal photograph to this public repository. The speaker keeps th
 
 ## Slides
 
-A 14-slide English draft lives in [`slides.md`](slides.md). It cites the captures in [`captures/`](captures/) and the measured baseline. It is not a rehearsal, it does not identify a backup recording, and it is not sent. S-008 remains incomplete.
+A 14-slide English draft lives in [`slides.md`](slides.md). It cites the captures in [`captures/`](captures/) and the measured baseline. It is not a rehearsal, it names `docs/speaker/rehearsal/backup-recording.webm`, and it is not sent. S-008 remains incomplete.
 
 ## Sending checklist
 

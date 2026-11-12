@@ -1,8 +1,8 @@
 # QA-R3 — Demo pipeline: Cursor Cloud implementation prompt
 
-**Status:** PROPOSED plan. Implementation is waiting for decision D-01. The user asked for this plan on 2026-11-11 and chose a scripted agent labeled `scripted-mock`. That choice selects the provider label. It does not approve a new command. Merge stays with a human. This file is a plan and a prompt. It is not an implementation and not a release decision.
+**Status:** IMPLEMENTED after D-01 sentence 1. Comment 6806395436 on PR #24 records that sentence. The user had chosen a scripted agent labeled `scripted-mock` on 2026-11-11. That choice selected the provider label. Sentence 1 is the scope approval. PR #24 then merged as docs only at `de91689`, so the implementation could not be added to that closed PR. It is on the follow-up branch. Merge of the implementation stays with a human. This file remains the prompt record. It is not a release decision. The implementation status stays IN_REVIEW.
 
-**D-01, still pending:** `docs/sprint-plan.md` W3-D7 defines QA-R3 as tests, critical repairs, and no new features. `pnpm demo:pipeline` would be a new command, so the PR body's "Scope impact: None" does not cover it. A later human comment on PR #24, outside a generated review, has to use one of these sentences exactly before anyone runs the prompt below:
+**D-01, recorded:** `docs/sprint-plan.md` W3-D7 defines QA-R3 as tests, critical repairs, and no new features. Sentence 1 approved `pnpm demo:pipeline` as a contingency exception. The three sentences below stay the record of what was required. Sentence 1 was the one posted. Because PR #24 is merged, the "stay on PR #24" clause could not be followed. The implementation is a new PR. Do not open a second implementation PR for the same command.
 
 1. `Apruebo D-01 opción A: pnpm demo:pipeline es una excepción documentada a «no features nuevos» en QA-R3, cargada a las 9 h de contingencia, y la implementación queda en el PR #24.`
 2. `Apruebo D-01 opción A: pnpm demo:pipeline es una excepción documentada a «no features nuevos» en QA-R3, cargada a las 9 h de contingencia, y la implementación va en un PR nuevo, no en el PR #24.`

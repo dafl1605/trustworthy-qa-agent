@@ -26,18 +26,23 @@ const SCENARIOS = ['NORMAL', 'GHOST_SUCCESS', 'VERIFICATION_UNAVAILABLE'] as con
 export const PLANNED_SPEECH_SEGMENTS = [
   { id: 'open', startSeconds: 0, durationSeconds: 60, label: 'Open: a passing screen is not the order' },
   { id: 'normal', startSeconds: 60, durationSeconds: 180, label: 'NORMAL: the screen and the stored row agree' },
-  { id: 'ghost', startSeconds: 240, durationSeconds: 240, label: 'GHOST_SUCCESS: the screen passes and the row is absent' },
+  {
+    id: 'ghost',
+    startSeconds: 240,
+    durationSeconds: 180,
+    label: 'GHOST_SUCCESS: the screen passes, the scripted agent says SUCCESS, and the row is absent',
+  },
   {
     id: 'unavailable',
-    startSeconds: 480,
+    startSeconds: 420,
     durationSeconds: 180,
     label: 'VERIFICATION_UNAVAILABLE: a 503 is not a 404',
   },
   {
     id: 'close',
-    startSeconds: 660,
-    durationSeconds: 60,
-    label: 'Close: the backup recording is the screen, not the oracle',
+    startSeconds: 600,
+    durationSeconds: 120,
+    label: 'Close: read the pipeline table, then the backup recording is the screen, not the oracle',
   },
 ] as const;
 
