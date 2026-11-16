@@ -54,11 +54,7 @@ After **QA-14**, `tests/evals/runner.ts` compares one supplied observation per l
 
 After **QA-15**, `fixtures/regression-baseline/baseline.json` freezes five measured `pnpm test:e2e` runs and five measured `pnpm test:e2e:ghost-oracle` runs. The file stores each run's statuses. Each regression run passed the same seven tests, including the limited `GHOST_SUCCESS` confirmation and the 503 oracle. Each ghost-oracle run exited 1, the stored lookup status is 404, and the assertion still expects 200. That failure stays the expected negative result. The freeze is not a release decision. O-001 through O-007 stay UNVERIFIED; `pnpm test` does not score them.
 
-After **QA-16**, [`docs/speaker/slides.md`](docs/speaker/slides.md) is a 14-slide English draft. It has not been sent and it has not been rehearsed aloud. The captures in [`docs/speaker/captures/`](docs/speaker/captures/) show the same `Order confirmed` screen for `NORMAL`, `GHOST_SUCCESS`, and `VERIFICATION_UNAVAILABLE`. The observation file records lookup `200 FOUND` / `CONFIRMED` / `ALLOW`, `404 ABSENT` / `DEFECT` / `BLOCK`, and `503 UNAVAILABLE` / `UNKNOWN` / `HOLD`. No model was called. The deck quotes the QA-15 freeze and the scripted eval counts, and it identifies `docs/speaker/rehearsal/backup-recording.webm`. S-008 is not complete.
-
-After **QA-17**, [`docs/speaker/demo-script.md`](docs/speaker/demo-script.md) is the operator script for those three modes. The backup recording is [`docs/speaker/rehearsal/backup-recording.webm`](docs/speaker/rehearsal/backup-recording.webm). [`rehearsal.json`](docs/speaker/rehearsal/rehearsal.json) times the automated checkouts and records the same matrix. `spokenDeliveryMeasured` is false. `pnpm demo:rehearsal` exits 0 when the three paths match that matrix. That exit is not `ALLOW`. A person has not timed the script aloud. S-008 is not complete.
-
-After **QA-18**, the meetup runbook below is the local path for those three modes. [`docs/speaker/talk-notes.md`](docs/speaker/talk-notes.md) is the English outline for the 35-minute content. [`docs/speaker/talk-rehearsal.json`](docs/speaker/talk-rehearsal.json) plans that outline as 2100 seconds and leaves `spokenElapsedSeconds` null. [`docs/speaker/deliverables.md`](docs/speaker/deliverables.md) lists the files a speaker can open. The deck identifies `docs/speaker/rehearsal/backup-recording.webm`. A person has not timed the talk aloud. S-008 is not complete.
+After **QA-16**, **QA-17** and **QA-18**, speaker materials (deck, captures, demo script, talk notes, backup recording) were produced. **QA-R4** removed them and the Spanish runbook from the repository; they live outside the repo and in git history. `pnpm demo:rehearsal` and `tests/e2e/speaker-captures.ts` still regenerate their outputs into the git-ignored `docs/speaker/` folder. `spokenDeliveryMeasured` stays false and S-008 is not complete.
 
 ## Meetup runbook
 
@@ -82,15 +78,11 @@ A 503 is not a 404. `HOLD` is not a softer `BLOCK`. A scripted `SUCCESS` diagnos
 
 `pnpm demo:pipeline` exits 0 when the same three modes pass through the collector, one scripted agent, the diagnosis check, `verifyOrder`, and policy `tqa-gate-1`. The provider label is `scripted-mock`. `modelInvoked` is false. `measuredFromModel` is false. A scripted `SUCCESS` on `GHOST_SUCCESS` stays `BLOCK` with `DIAGNOSIS_IGNORED`. A scripted claim that the 503 is a confirmed missing order stays `HOLD`. That exit is not `ALLOW`.
 
-The backup recording is `docs/speaker/rehearsal/backup-recording.webm`.
-
-The deck in `docs/speaker/slides.md` identifies `docs/speaker/rehearsal/backup-recording.webm`. If the live checkout cannot be shown, play the video and read only the rows in `docs/speaker/rehearsal/rehearsal.json`. The video is the confirmation screen. It is not the order lookup and it is not a release decision.
-
-The 12-minute words are `docs/speaker/demo-script.md`. The 35-minute outline is `docs/speaker/talk-notes.md`. The file list is `docs/speaker/deliverables.md`.
+`pnpm demo:rehearsal` writes a backup recording to the git-ignored `docs/speaker/rehearsal/backup-recording.webm`. If the live checkout cannot be shown, play that video and read only the rows in `docs/speaker/rehearsal/rehearsal.json`. The video is the confirmation screen. It is not the order lookup and it is not a release decision. The speaker script and deck are kept outside this repository.
 
 `spokenDeliveryMeasured` is false. A person has not timed the talk aloud. S-008 is not complete.
 
-O-001 through O-007 remain UNVERIFIED. Do not quote a percent. Do not present a scripted diagnosis as a live model result. The proposal in `docs/speaker/2026-11-25-browserstack-draft.md` has not been sent.
+O-001 through O-007 remain UNVERIFIED. Do not quote a percent. Do not present a scripted diagnosis as a live model result.
 
 ## Requirements
 
@@ -114,7 +106,7 @@ pnpm exec playwright install chromium   # once, needed by e2e and demo commands
 | `pnpm test:e2e` | Playwright `regression` project (seven tests). | Regression passed. Not `ALLOW`. |
 | `pnpm test:e2e:ghost-oracle` | Persistence oracle against `GHOST_SUCCESS`. | It is **expected to exit 1** (expects 200, receives 404). That is the expected negative result. |
 | `pnpm demo:false-pass` | Limited ghost UI pass plus five failing ghost oracles. | The false pass was reproduced. Not `ALLOW`. |
-| `pnpm demo:rehearsal` | Three automated checkouts; rewrites `docs/speaker/rehearsal/backup-recording.webm` and `rehearsal.json`. | The three paths matched the matrix. Not `ALLOW`. |
+| `pnpm demo:rehearsal` | Three automated checkouts; writes `backup-recording.webm` and `rehearsal.json` to the git-ignored `docs/speaker/rehearsal/`. | The three paths matched the matrix. Not `ALLOW`. |
 | `pnpm demo:pipeline` | Collector, scripted agent, diagnosis check, `verifyOrder`, `decideRelease` for the three modes; prints a table. | The rows matched the matrix. Not `ALLOW`. |
 | `pnpm db:migrate` | Applies the SQLite schema. | Schema applied. |
 | `pnpm --filter @tqa/api start` | Loopback API on `127.0.0.1:3001` (needs a prior build). | — |
@@ -141,10 +133,8 @@ Copy values from `.env.example`; it holds placeholders only. Never commit a real
 
 ## Documentation
 
-- Runbook and deep-dive: [`docs/runbook.md`](docs/runbook.md)
 - Layout and ADRs: [`docs/architecture.md`](docs/architecture.md), [`docs/adr/`](docs/adr/)
 - Contracts and acceptance: [`docs/architecture-contracts.md`](docs/architecture-contracts.md), [`docs/spec.md`](docs/spec.md), [`docs/intent.md`](docs/intent.md)
 - Plan: [`docs/sprint-plan.md`](docs/sprint-plan.md), [`docs/progress/`](docs/progress/)
-- Speaker materials: [`docs/speaker/deliverables.md`](docs/speaker/deliverables.md)
 - Cursor: [`docs/platforms/cursor/START_CURSOR.md`](docs/platforms/cursor/START_CURSOR.md); Claude: [`docs/platforms/claude/START_CLAUDE.md`](docs/platforms/claude/START_CLAUDE.md)
 - Shared constraints: [`AGENTS.md`](AGENTS.md)

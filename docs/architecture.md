@@ -211,27 +211,9 @@ The report version is `tqa-eval-report-1`. It lists every case and counts classi
 
 The loader stays in `tests/contract/golden-dataset.ts`. The runner imports it. O-001 through O-007 stay UNVERIFIED. The QA-15 session recorded that score in `docs/orchestrator-eval-probes.md`. `pnpm test` does not score those probes.
 
-## Speaker slides (QA-16)
+## Speaker materials (QA-16 to QA-18, removed in QA-R4)
 
-`docs/speaker/slides.md` is a 14-slide English draft for the meetup. It is not sent, not rehearsed aloud, and not a gate decision. The three confirmation PNGs in `docs/speaker/captures/` show the same `Order confirmed` text. `observations.json` records the lookup, `verifyOrder`, and `decideRelease` results for those three checkouts. The diagnosis in that file is `scripted-for-slide`. `modelInvoked` is false. Slide 10 quotes `tqa-regression-baseline-2` without turning its durations into a rate. Slide 11 quotes the scripted eval counts and says `measuredFromModel` is false. O-001 through O-007 stay UNVERIFIED. `tests/e2e/speaker-captures.ts` is not a Playwright spec, so `pnpm test:e2e` still runs the QA-15 inventory of seven tests. The deck names `docs/speaker/rehearsal/backup-recording.webm`. S-008 stays incomplete.
-
-## Demo rehearsal (QA-17)
-
-`docs/speaker/demo-script.md` is the English operator script for the 12-minute demo. The minute marks are a plan that sums to 720 seconds. A person has not timed that script aloud. `spokenDeliveryMeasured` in `docs/speaker/rehearsal/rehearsal.json` stays false. S-008 stays incomplete.
-
-`docs/speaker/rehearsal/backup-recording.webm` is the backup recording. The script names that path. The video shows the confirmation screen for one mug in `NORMAL`, `GHOST_SUCCESS`, and `VERIFICATION_UNAVAILABLE`. Each confirmation is held for `visibleHoldMs` so the recording can show it. That hold is not a spoken pause. The screen says `Order confirmed` in each. The video does not show the order lookup and it is not a gate decision.
-
-The JSON file records the lookup, `verifyOrder`, and `decideRelease` for that same run. The diagnosis attached there is `scripted-for-rehearsal`. `modelInvoked` is false. `NORMAL` is `200 FOUND` / `CONFIRMED` / `ALLOW`. `GHOST_SUCCESS` stays `404 ABSENT` / `DEFECT` / `BLOCK` when a scripted `SUCCESS` diagnosis is attached. `VERIFICATION_UNAVAILABLE` stays `503` `service_unavailable` / `UNKNOWN` / `HOLD`, including a scripted claim that the 503 is a confirmed missing order. `elapsedMs` is the wall-clock time of the automated paths. `pnpm demo:rehearsal` exiting 0 means those three paths matched the matrix. It does not mean `ALLOW`.
-
-`tests/e2e/demo-rehearsal.ts` is not a Playwright spec. `pnpm test:e2e` does not run it. The QA-15 seven-test inventory is unchanged. The deck names `docs/speaker/rehearsal/backup-recording.webm`.
-
-## Talk notes and runbook (QA-18)
-
-`README.md` has a meetup runbook. It restates the three local commands that show the matrix, and it says what a green `pnpm test:e2e` does not prove. The harness stays off unless `TQA_HARNESS=1` and a non-empty `TQA_HARNESS_TOKEN` are set for a loopback caller. The runbook does not print a token.
-
-`docs/speaker/talk-notes.md` is the English outline for about 35 minutes. The planned segments in `docs/speaker/talk-rehearsal.json` sum to 2100 seconds. One of those segments is the 720-second demo plan already written in `docs/speaker/demo-script.md`. Those 720 seconds are not added a second time. `spokenElapsedSeconds` is null. `spokenDeliveryMeasured` stays false. A person has not timed the outline aloud. S-008 stays incomplete.
-
-`docs/speaker/deliverables.md` lists the deck, the demo script, the backup recording, the captures, the golden dataset, and the regression freeze. The deck names `docs/speaker/rehearsal/backup-recording.webm`. The proposal in `docs/speaker/2026-11-25-browserstack-draft.md` stays unsent. O-001 through O-007 stay UNVERIFIED.
+The deck, captures, demo script, talk notes, planned timings and backup recording were removed from the repository in QA-R4. `README.md` keeps the meetup runbook commands. `tests/e2e/speaker-captures.ts` and `tests/e2e/demo-rehearsal.ts` remain; they are not Playwright specs, `pnpm test:e2e` does not run them, and they write their outputs to the git-ignored `docs/speaker/` folder. Their outputs are local artifacts, not a gate decision. `spokenDeliveryMeasured` stays false. S-008 stays incomplete. O-001 through O-007 stay UNVERIFIED.
 
 ## Demo pipeline (QA-R3)
 
